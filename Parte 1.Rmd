@@ -1,0 +1,25 @@
+---
+title: "Parte 1 - Análise do Dataset"
+author: "Integrantes Aqui"
+date: "21 de maio de 2018"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Análise Táxi NY
+
+<p>Descrição do exercício</p>
+
+## 1 - Entendimento / Descrição do Dataset
+
+
+
+
+
+
+
+
+
