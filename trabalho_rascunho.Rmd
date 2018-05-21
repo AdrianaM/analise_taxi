@@ -3,64 +3,60 @@ title: "R Notebook"
 output: html_notebook
 ---
 ```{r}
-#install.packages("magrittr") # 
 library(magrittr) # quando der problema com o "%>%"
 library('dplyr') # selecao e filtro de dados
 library('geosphere') # localizacao geoespacial
+library(lubridate) # datas, funções hour, month, wday
+library(plotly) # plot dos gráficos
+library(knitr) # usada pelo plotly
+source('preprocessing.R')
 ```
+
 
 ```{r}
-train <- read.csv("~/FIAP/IA_MODULO_02/train/train.csv")
+train <- read.csv("train/train.csv")
 
+# pega apenas as 10 primeiras linhas para teste
+df <- head(train, 300)
 ```
 
+Adiciona distância Euclidiana calculada a partir das coordenadas (arquivo Preprocessing.R)
 ```{r}
 
-df <- head(train, 10)
-
-df %>% 
-  select(pickup_longitude, pickup_latitude) -> df$coordenada_partida
-  
-df %>% 
-  select(dropoff_longitude, dropoff_latitude) -> df$coordenada_chegada
-
-# Distancia euclidiana (considerando a curvatura da Terra como uma esfera)
-distCosine(df$coordenada_partida, df$coordenada_chegada, r=6378137)
+df$dist_euclidiana = dist_eucl(df)
 
 ```
 
+Adiciona distância de Manhattan calculada a partir das coordenadas (arquivo Preprocessing.R)
 ```{r}
 
-# Distancia euclidiana em km (considerando a curvatura da Terra como uma esfera)
-distCosine(df$coordenada_partida, df$coordenada_chegada) / 1000 -> df$dist_euclidiana
-
+df$dist_manhattan = dist_manh(df)
 
 ```
+
+Prepara data e hora da paprtida (acho que não precisa da chegada)
+Com isso é possível pegar horário de pico e dia da semana
 
 ```{r}
-# Calculo da distancia de manhattan
-# Passo 1 - Criar coordenadas fixando a mesma longitude para a chegada e a partida
-df %>% 
-  select(pickup_longitude, pickup_latitude) -> df$coordenada_partida_longitude_fixa
-df %>% 
-  select(pickup_longitude, dropoff_latitude) -> df$coordenada_chegada_longitude_fixa
-
-# Passo 2 - Criar coordenadas fixando a mesma latitude para a chegada e a partida
-df %>% 
-  select(pickup_longitude, pickup_latitude) -> df$coordenada_partida_latitude_fixa
-df %>% 
-  select(dropoff_longitude, pickup_latitude) -> df$coordenada_chegada_latitude_fixa
-
-# Passo 3 - calcular a distancia considerando a longitude fixa
-distCosine(df$coordenada_partida_longitude_fixa, df$coordenada_chegada_longitude_fixa)  -> df$delta_manhattan_longitude_fixa
-
-distCosine(df$coordenada_partida_latitude_fixa, df$coordenada_chegada_latitude_fixa)  -> df$delta_manhattan_latitude_fixa
-
-# Passo 4 - Somar os deltas obtidos 
-(df$delta_manhattan_latitude_fixa + df$delta_manhattan_longitude_fixa) / 1000 -> df$dist_manhattan
-
-# Print dos dados
-df %>% 
-  select(pickup_longitude, dropoff_latitude, dist_euclidiana, dist_manhattan)
+df$pickup_hour <- hour(df$pickup_datetime)
+df$pickup_month <- month(df$pickup_datetime)
+df$pickup_weekdays <- wday(df$pickup_datetime)
 ```
 
+Plotar correlação distancia tempo
+```{r}
+plot_ly(data= df, x= ~dist_euclidiana, y= ~trip_duration, type = 'scatter', mode = 'markers')
+```
+
+Plotar correlação distancia tempo manhatan
+```{r}
+plot_ly(data= df, x= ~dist_manhattan, y= ~trip_duration, type = 'scatter', mode = 'markers')
+```
+
+Média da duração das viagens por hora
+```{r}
+df %>%
+  group_by(pickup_hour) %>%
+  summarize(mean_trip_duration = mean(trip_duration),n()) -> data_plot
+plot_ly(data= data_plot, x= ~pickup_hour, y= ~mean_trip_duration, type = 'bar')
+```
