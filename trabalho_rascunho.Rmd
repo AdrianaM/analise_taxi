@@ -2,6 +2,7 @@
 title: "R Notebook"
 output: html_notebook
 ---
+
 ```{r}
 library(magrittr) # quando der problema com o "%>%"
 library('dplyr') # selecao e filtro de dados
@@ -37,7 +38,7 @@ df$dist_manhattan = dist_manh(df)
 
 ```
 
-Prepara data e hora da paprtida (acho que não precisa da chegada)
+Prepara data e hora da partida (acho que não precisa da chegada)
 Com isso é possível pegar horário de pico e dia da semana
 
 ```{r}
