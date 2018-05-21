@@ -42,5 +42,17 @@ min_max_scaler <- function(data){
   return ((data - min(data)) / (max(data) - min(data)))
 }
 
+create_formula <- function(data){
+  feats <- names(data)
+  
+  # Concatenate strings
+  f <- paste(feats,collapse=' + ')
+  f <- paste('trip_duration ~',f)
+  
+  # Convert to formula
+  f <- as.formula(f)
+  
+  f
+}
 
 

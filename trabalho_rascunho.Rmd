@@ -9,8 +9,9 @@ library('geosphere') # localizacao geoespacial
 library(lubridate) # datas, funções hour, month, wday
 library(plotly) # plot dos gráficos
 library(knitr) # usada pelo plotly
-library(dummies)
-library(scales)
+library(dummies) # cria colunas binárias para variáveis categóricas
+library(scales) # normaliza dados rescalando para float de 0 a 1
+library(randomForest) # cria rede neural para criar regressão de tempo de viagem
 source('preprocessing.R')
 ```
 
@@ -19,7 +20,7 @@ source('preprocessing.R')
 train <- read.csv("train/train.csv")
 
 # pega apenas as 10 primeiras linhas para teste
-df <- head(train, 300)
+df <- head(train, 10000)
 ```
 
 Adiciona distância Euclidiana calculada a partir das coordenadas (arquivo Preprocessing.R)
@@ -43,6 +44,14 @@ Com isso é possível pegar horário de pico e dia da semana
 df$pickup_hour <- hour(df$pickup_datetime)
 df$pickup_month <- month(df$pickup_datetime)
 df$pickup_weekdays <- wday(df$pickup_datetime)
+```
+
+Limpeza de corridas zeradas e limpa corridas muito longas
+```{r}
+df %>%
+  filter(df$dist_manhattan > 0.5) -> df
+df %>%
+  filter(df$trip_duration < 10000) -> df
 ```
 
 Plotar correlação distancia tempo
@@ -71,12 +80,6 @@ df %>%
 plot_ly(data= data_plot, x= ~pickup_hour, y= ~n, type = 'bar')
 ```
 
-Limpeza de corridas zeradas
-```{r}
-df %>%
-  filter(df$dist_manhattan > 0.5) -> df
-```
-
 Normalizar dados para a análise
 
 Primeiro, criando variáveis dummies para dia da semana e hora
@@ -94,4 +97,25 @@ df$trip_duration = rescale(df$trip_duration)
 df$passenger_count = rescale(df$trip_duration)
 
 ```
+
+define X (train features) e y (target) para o treino
+```{r}
+X <- df[c('passenger_count', 'dist_manhattan', 'pickup_weekdays_1', 'pickup_weekdays_2', 'pickup_weekdays_3',
+         'pickup_weekdays_4', 'pickup_weekdays_5', 'pickup_weekdays_6', 'pickup_weekdays_7', 'pickup_hour_1',
+         'pickup_hour_2', 'pickup_hour_3', 'pickup_hour_4', 'pickup_hour_5', 'pickup_hour_6', 'pickup_hour_7',
+         'pickup_hour_8', 'pickup_hour_9', 'pickup_hour_10', 'pickup_hour_11', 'pickup_hour_12',
+         'pickup_hour_13', 'pickup_hour_14', 'pickup_hour_15', 'pickup_hour_16', 'pickup_hour_17',
+         'pickup_hour_18', 'pickup_hour_19', 'pickup_hour_20', 'pickup_hour_21', 'pickup_hour_22',
+         'pickup_hour_23')]
+
+y <- df['trip_duration']
+```
+
+Cria rede neural para previsão de tempo de duração das viagens (trip_duration)
+```{r}
+f = create_formula(X)
+fit <- randomForest(f, df, importance=TRUE, ntree=200)
+varImpPlot(fit)
+```
+
 
