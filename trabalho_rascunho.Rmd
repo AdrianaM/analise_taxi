@@ -9,6 +9,8 @@ library('geosphere') # localizacao geoespacial
 library(lubridate) # datas, funções hour, month, wday
 library(plotly) # plot dos gráficos
 library(knitr) # usada pelo plotly
+library(dummies)
+library(scales)
 source('preprocessing.R')
 ```
 
@@ -60,3 +62,36 @@ df %>%
   summarize(mean_trip_duration = mean(trip_duration),n()) -> data_plot
 plot_ly(data= data_plot, x= ~pickup_hour, y= ~mean_trip_duration, type = 'bar')
 ```
+
+Quantidade de viagens por hora
+```{r}
+df %>%
+  group_by(pickup_hour) %>%
+  count() -> data_plot
+plot_ly(data= data_plot, x= ~pickup_hour, y= ~n, type = 'bar')
+```
+
+Limpeza de corridas zeradas
+```{r}
+df %>%
+  filter(df$dist_manhattan > 0.5) -> df
+```
+
+Normalizar dados para a análise
+
+Primeiro, criando variáveis dummies para dia da semana e hora
+```{r}
+week_dummy = dummy(df$pickup_weekdays, sep='_')
+hour_dummy = dummy(df$pickup_hour, sep='_')
+
+df = data.frame(cbind(df, week_dummy, hour_dummy))
+```
+
+Agora normalizando com Min Max Scaler as variáveis: distância, trip_duration e passenger_count
+```{r}
+df$dist_manhattan = rescale(df$dist_manhattan)
+df$trip_duration = rescale(df$trip_duration)
+df$passenger_count = rescale(df$trip_duration)
+
+```
+

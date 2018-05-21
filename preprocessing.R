@@ -38,6 +38,9 @@ dist_manh <- function(df){
 
 }
 
+min_max_scaler <- function(data){
+  return ((data - min(data)) / (max(data) - min(data)))
+}
 
 
 
