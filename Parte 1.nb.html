@@ -9,7 +9,7 @@
 <meta name="generator" content="pandoc" />
 
 
-<meta name="author" content="Integrantes Aqui" />
+<meta name="author" content="Adriana Matsubara, Bruno Aquino, Rafael Bueno, Vinicius Scimioni" />
 
 
 <title>Parte 1 - Análise do Dataset</title>
@@ -169,7 +169,7 @@ $(document).ready(function () {
 
 
 <h1 class="title toc-ignore">Parte 1 - Análise do Dataset</h1>
-<h4 class="author"><em>Integrantes Aqui</em></h4>
+<h4 class="author"><em>Adriana Matsubara, Bruno Aquino, Rafael Bueno, Vinicius Scimioni</em></h4>
 <h4 class="date"><em>21 de maio de 2018</em></h4>
 
 </div>
@@ -183,13 +183,117 @@ $(document).ready(function () {
 <p>
 Descrição do exercício
 </p>
+<p>Carregar as “libraries” a serem utilizadas:</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShtYWdyaXR0cikgIyBxdWFuZG8gZGVyIHByb2JsZW1hIGNvbSBvIFwiJT4lXCJcbmxpYnJhcnkoJ2RwbHlyJykgIyBzZWxlY2FvIGUgZmlsdHJvIGRlIGRhZG9zXG5saWJyYXJ5KCdnZW9zcGhlcmUnKSAjIGxvY2FsaXphY2FvIGdlb2VzcGFjaWFsXG5saWJyYXJ5KGx1YnJpZGF0ZSkgIyBkYXRhcywgZnVuw6fDtWVzIGhvdXIsIG1vbnRoLCB3ZGF5XG5saWJyYXJ5KHBsb3RseSkgIyBwbG90IGRvcyBncsOhZmljb3NcbmxpYnJhcnkoa25pdHIpICMgdXNhZGEgcGVsbyBwbG90bHlcbmxpYnJhcnkoZHVtbWllcykgIyBjcmlhIGNvbHVuYXMgYmluw6FyaWFzIHBhcmEgdmFyacOhdmVpcyBjYXRlZ8OzcmljYXNcbmxpYnJhcnkoc2NhbGVzKSAjIG5vcm1hbGl6YSBkYWRvcyByZXNjYWxhbmRvIHBhcmEgZmxvYXQgZGUgMCBhIDFcbmxpYnJhcnkocmFuZG9tRm9yZXN0KSAjIGNyaWEgcmVkZSBuZXVyYWwgcGFyYSBjcmlhciByZWdyZXNzw6NvIGRlIHRlbXBvIGRlIHZpYWdlbVxuc291cmNlKCdwcmVwcm9jZXNzaW5nLlInKVxuYGBgIn0= -->
+<pre class="r"><code>library(magrittr) # quando der problema com o &quot;%&gt;%&quot;
+library('dplyr') # selecao e filtro de dados
+library('geosphere') # localizacao geoespacial
+library(lubridate) # datas, funções hour, month, wday
+library(plotly) # plot dos gráficos
+library(knitr) # usada pelo plotly
+library(dummies) # cria colunas binárias para variáveis categóricas
+library(scales) # normaliza dados rescalando para float de 0 a 1
+library(randomForest) # cria rede neural para criar regressão de tempo de viagem
+source('preprocessing.R')</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
 <div id="entendimento-descricao-do-dataset" class="section level2">
 <h2>1 - Entendimento / Descrição do Dataset</h2>
+<p>Carregar os datasets</p>
+<!-- rnb-text-end -->
+<!-- rnb-text-begin -->
+<p>Verificar se existem nulos</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc3VtKGlzLm5hKHRyYWluKSlcbmBgYCJ9 -->
+<pre class="r"><code>sum(is.na(train))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIDBcbiJ9 -->
+<pre><code>[1] 0</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc3VtKGlzLm5hKHRlc3QpKVxuYGBgIn0= -->
+<pre class="r"><code>sum(is.na(test))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIDBcbiJ9 -->
+<pre><code>[1] 0</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Summary das tabelas</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc3VtbWFyeSh0cmFpbilcbmBgYCJ9 -->
+<pre class="r"><code>summary(train)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiICAgICAgaWQgICAgICAgICAgICAgIHZlbmRvcl9pZCAgICAgcGlja3VwX2RhdGV0aW1lICAgICAgICAgICAgICAgZHJvcG9mZl9kYXRldGltZSAgICAgICAgICAgICAgcGFzc2VuZ2VyX2NvdW50XG4gTGVuZ3RoOjE0NTg2NDQgICAgIE1pbi4gICA6MS4wMDAgICBNaW4uICAgOjIwMTYtMDEtMDEgMDA6MDA6MTcgICBNaW4uICAgOjIwMTYtMDEtMDEgMDA6MDM6MzEgICBNaW4uICAgOjAuMDAwICBcbiBDbGFzcyA6Y2hhcmFjdGVyICAgMXN0IFF1LjoxLjAwMCAgIDFzdCBRdS46MjAxNi0wMi0xNyAxNjo0NjowNCAgIDFzdCBRdS46MjAxNi0wMi0xNyAxNzowNTozMiAgIDFzdCBRdS46MS4wMDAgIFxuIE1vZGUgIDpjaGFyYWN0ZXIgICBNZWRpYW4gOjIuMDAwICAgTWVkaWFuIDoyMDE2LTA0LTAxIDE3OjE5OjQwICAgTWVkaWFuIDoyMDE2LTA0LTAxIDE3OjM1OjEyICAgTWVkaWFuIDoxLjAwMCAgXG4gICAgICAgICAgICAgICAgICAgIE1lYW4gICA6MS41MzUgICBNZWFuICAgOjIwMTYtMDQtMDEgMTA6MTA6MjQgICBNZWFuICAgOjIwMTYtMDQtMDEgMTA6MjY6MjQgICBNZWFuICAgOjEuNjY1ICBcbiAgICAgICAgICAgICAgICAgICAgM3JkIFF1LjoyLjAwMCAgIDNyZCBRdS46MjAxNi0wNS0xNSAwMzo1NjowOCAgIDNyZCBRdS46MjAxNi0wNS0xNSAwNDoxMDo1MSAgIDNyZCBRdS46Mi4wMDAgIFxuICAgICAgICAgICAgICAgICAgICBNYXguICAgOjIuMDAwICAgTWF4LiAgIDoyMDE2LTA2LTMwIDIzOjU5OjM5ICAgTWF4LiAgIDoyMDE2LTA3LTAxIDIzOjAyOjAzICAgTWF4LiAgIDo5LjAwMCAgXG4gcGlja3VwX2xvbmdpdHVkZSAgcGlja3VwX2xhdGl0dWRlIGRyb3BvZmZfbG9uZ2l0dWRlIGRyb3BvZmZfbGF0aXR1ZGUgc3RvcmVfYW5kX2Z3ZF9mbGFnIHRyaXBfZHVyYXRpb24gICAgXG4gTWluLiAgIDotMTIxLjkzICAgTWluLiAgIDozNC4zNiAgIE1pbi4gICA6LTEyMS45MyAgIE1pbi4gICA6MzIuMTggICAgTGVuZ3RoOjE0NTg2NDQgICAgIE1pbi4gICA6ICAgICAgMSAgXG4gMXN0IFF1LjogLTczLjk5ICAgMXN0IFF1Ljo0MC43NCAgIDFzdCBRdS46IC03My45OSAgIDFzdCBRdS46NDAuNzQgICAgQ2xhc3MgOmNoYXJhY3RlciAgIDFzdCBRdS46ICAgIDM5NyAgXG4gTWVkaWFuIDogLTczLjk4ICAgTWVkaWFuIDo0MC43NSAgIE1lZGlhbiA6IC03My45OCAgIE1lZGlhbiA6NDAuNzUgICAgTW9kZSAgOmNoYXJhY3RlciAgIE1lZGlhbiA6ICAgIDY2MiAgXG4gTWVhbiAgIDogLTczLjk3ICAgTWVhbiAgIDo0MC43NSAgIE1lYW4gICA6IC03My45NyAgIE1lYW4gICA6NDAuNzUgICAgICAgICAgICAgICAgICAgICAgIE1lYW4gICA6ICAgIDk1OSAgXG4gM3JkIFF1LjogLTczLjk3ICAgM3JkIFF1Ljo0MC43NyAgIDNyZCBRdS46IC03My45NiAgIDNyZCBRdS46NDAuNzcgICAgICAgICAgICAgICAgICAgICAgIDNyZCBRdS46ICAgMTA3NSAgXG4gTWF4LiAgIDogLTYxLjM0ICAgTWF4LiAgIDo1MS44OCAgIE1heC4gICA6IC02MS4zNCAgIE1heC4gICA6NDMuOTIgICAgICAgICAgICAgICAgICAgICAgIE1heC4gICA6MzUyNjI4MiAgXG4ifQ== -->
+<pre><code>      id              vendor_id     pickup_datetime               dropoff_datetime              passenger_count
+ Length:1458644     Min.   :1.000   Min.   :2016-01-01 00:00:17   Min.   :2016-01-01 00:03:31   Min.   :0.000  
+ Class :character   1st Qu.:1.000   1st Qu.:2016-02-17 16:46:04   1st Qu.:2016-02-17 17:05:32   1st Qu.:1.000  
+ Mode  :character   Median :2.000   Median :2016-04-01 17:19:40   Median :2016-04-01 17:35:12   Median :1.000  
+                    Mean   :1.535   Mean   :2016-04-01 10:10:24   Mean   :2016-04-01 10:26:24   Mean   :1.665  
+                    3rd Qu.:2.000   3rd Qu.:2016-05-15 03:56:08   3rd Qu.:2016-05-15 04:10:51   3rd Qu.:2.000  
+                    Max.   :2.000   Max.   :2016-06-30 23:59:39   Max.   :2016-07-01 23:02:03   Max.   :9.000  
+ pickup_longitude  pickup_latitude dropoff_longitude dropoff_latitude store_and_fwd_flag trip_duration    
+ Min.   :-121.93   Min.   :34.36   Min.   :-121.93   Min.   :32.18    Length:1458644     Min.   :      1  
+ 1st Qu.: -73.99   1st Qu.:40.74   1st Qu.: -73.99   1st Qu.:40.74    Class :character   1st Qu.:    397  
+ Median : -73.98   Median :40.75   Median : -73.98   Median :40.75    Mode  :character   Median :    662  
+ Mean   : -73.97   Mean   :40.75   Mean   : -73.97   Mean   :40.75                       Mean   :    959  
+ 3rd Qu.: -73.97   3rd Qu.:40.77   3rd Qu.: -73.96   3rd Qu.:40.77                       3rd Qu.:   1075  
+ Max.   : -61.34   Max.   :51.88   Max.   : -61.34   Max.   :43.92                       Max.   :3526282  </code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc3VtbWFyeSh0ZXN0KVxuYGBgIn0= -->
+<pre class="r"><code>summary(test)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiICAgICAgaWQgICAgICAgICAgICAgIHZlbmRvcl9pZCAgICAgcGlja3VwX2RhdGV0aW1lICAgICAgICAgICAgICAgcGFzc2VuZ2VyX2NvdW50IHBpY2t1cF9sb25naXR1ZGUgXG4gTGVuZ3RoOjYyNTEzNCAgICAgIE1pbi4gICA6MS4wMDAgICBNaW4uICAgOjIwMTYtMDEtMDEgMDA6MDA6MjIgICBNaW4uICAgOjAuMDAwICAgTWluLiAgIDotMTIxLjkzICBcbiBDbGFzcyA6Y2hhcmFjdGVyICAgMXN0IFF1LjoxLjAwMCAgIDFzdCBRdS46MjAxNi0wMi0xNyAxOTo0NDoxOSAgIDFzdCBRdS46MS4wMDAgICAxc3QgUXUuOiAtNzMuOTkgIFxuIE1vZGUgIDpjaGFyYWN0ZXIgICBNZWRpYW4gOjIuMDAwICAgTWVkaWFuIDoyMDE2LTA0LTAxIDIwOjAxOjQzICAgTWVkaWFuIDoxLjAwMCAgIE1lZGlhbiA6IC03My45OCAgXG4gICAgICAgICAgICAgICAgICAgIE1lYW4gICA6MS41MzUgICBNZWFuICAgOjIwMTYtMDQtMDEgMTM6Mjc6MDEgICBNZWFuICAgOjEuNjYyICAgTWVhbiAgIDogLTczLjk3ICBcbiAgICAgICAgICAgICAgICAgICAgM3JkIFF1LjoyLjAwMCAgIDNyZCBRdS46MjAxNi0wNS0xNSAxMDowNzo1MiAgIDNyZCBRdS46Mi4wMDAgICAzcmQgUXUuOiAtNzMuOTcgIFxuICAgICAgICAgICAgICAgICAgICBNYXguICAgOjIuMDAwICAgTWF4LiAgIDoyMDE2LTA2LTMwIDIzOjU5OjU4ICAgTWF4LiAgIDo5LjAwMCAgIE1heC4gICA6IC02OS4yNSAgXG4gcGlja3VwX2xhdGl0dWRlIGRyb3BvZmZfbG9uZ2l0dWRlIGRyb3BvZmZfbGF0aXR1ZGUgc3RvcmVfYW5kX2Z3ZF9mbGFnXG4gTWluLiAgIDozNy4zOSAgIE1pbi4gICA6LTEyMS45MyAgIE1pbi4gICA6MzYuNjAgICAgTGVuZ3RoOjYyNTEzNCAgICAgXG4gMXN0IFF1Ljo0MC43NCAgIDFzdCBRdS46IC03My45OSAgIDFzdCBRdS46NDAuNzQgICAgQ2xhc3MgOmNoYXJhY3RlciAgXG4gTWVkaWFuIDo0MC43NSAgIE1lZGlhbiA6IC03My45OCAgIE1lZGlhbiA6NDAuNzUgICAgTW9kZSAgOmNoYXJhY3RlciAgXG4gTWVhbiAgIDo0MC43NSAgIE1lYW4gICA6IC03My45NyAgIE1lYW4gICA6NDAuNzUgICAgICAgICAgICAgICAgICAgICAgXG4gM3JkIFF1Ljo0MC43NyAgIDNyZCBRdS46IC03My45NiAgIDNyZCBRdS46NDAuNzcgICAgICAgICAgICAgICAgICAgICAgXG4gTWF4LiAgIDo0Mi44MSAgIE1heC4gICA6IC02Ny41MCAgIE1heC4gICA6NDguODYgICAgICAgICAgICAgICAgICAgICAgXG4ifQ== -->
+<pre><code>      id              vendor_id     pickup_datetime               passenger_count pickup_longitude 
+ Length:625134      Min.   :1.000   Min.   :2016-01-01 00:00:22   Min.   :0.000   Min.   :-121.93  
+ Class :character   1st Qu.:1.000   1st Qu.:2016-02-17 19:44:19   1st Qu.:1.000   1st Qu.: -73.99  
+ Mode  :character   Median :2.000   Median :2016-04-01 20:01:43   Median :1.000   Median : -73.98  
+                    Mean   :1.535   Mean   :2016-04-01 13:27:01   Mean   :1.662   Mean   : -73.97  
+                    3rd Qu.:2.000   3rd Qu.:2016-05-15 10:07:52   3rd Qu.:2.000   3rd Qu.: -73.97  
+                    Max.   :2.000   Max.   :2016-06-30 23:59:58   Max.   :9.000   Max.   : -69.25  
+ pickup_latitude dropoff_longitude dropoff_latitude store_and_fwd_flag
+ Min.   :37.39   Min.   :-121.93   Min.   :36.60    Length:625134     
+ 1st Qu.:40.74   1st Qu.: -73.99   1st Qu.:40.74    Class :character  
+ Median :40.75   Median : -73.98   Median :40.75    Mode  :character  
+ Mean   :40.75   Mean   : -73.97   Mean   :40.75                      
+ 3rd Qu.:40.77   3rd Qu.: -73.96   3rd Qu.:40.77                      
+ Max.   :42.81   Max.   : -67.50   Max.   :48.86                      </code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Variáveis de Data</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudHJhaW4kcGlja3VwX2hvdXIgPC0gaG91cih0cmFpbiRwaWNrdXBfZGF0ZXRpbWUpXG50cmFpbiRwaWNrdXBfd2VlayA8LSB3ZWVrKHRyYWluJHBpY2t1cF9kYXRldGltZSlcbnRyYWluJHBpY2t1cF9tb250aCA8LSBtb250aCh0cmFpbiRwaWNrdXBfZGF0ZXRpbWUpXG50cmFpbiRwaWNrdXBfd2Vla2RheXMgPC0gd2Vla2RheXModHJhaW4kcGlja3VwX2RhdGV0aW1lKVxudHJhaW4kcGlja3VwX3dlZWtlbmQgPC0gaWZlbHNlKHRyYWluJHBpY2t1cF93ZWVrZGF5cz09MSB8IHRyYWluJHBpY2t1cF93ZWVrZGF5cz09NyxcIldlZWtlbmRcIixcIm5vdC1XZWVrZW5kXCIpXG50cmFpbiA9IGFzLmRhdGEudGFibGUodHJhaW4pXG5gYGAifQ== -->
+<pre class="r"><code>train$pickup_hour &lt;- hour(train$pickup_datetime)
+train$pickup_week &lt;- week(train$pickup_datetime)
+train$pickup_month &lt;- month(train$pickup_datetime)
+train$pickup_weekdays &lt;- weekdays(train$pickup_datetime)
+train$pickup_weekend &lt;- ifelse(train$pickup_weekdays==1 | train$pickup_weekdays==7,&quot;Weekend&quot;,&quot;not-Weekend&quot;)
+train = as.data.table(train)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiRXJyb3IgaW4gYXMuZGF0YS50YWJsZSh0cmFpbikgOiBjb3VsZCBub3QgZmluZCBmdW5jdGlvbiBcImFzLmRhdGEudGFibGVcIlxuIn0= -->
+<pre><code>Error in as.data.table(train) : could not find function &quot;as.data.table&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 </div>
 </div>
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIlBhcnRlIDEgLSBBbuFsaXNlIGRvIERhdGFzZXQiDQphdXRob3I6ICJJbnRlZ3JhbnRlcyBBcXVpIg0KZGF0ZTogIjIxIGRlIG1haW8gZGUgMjAxOCINCm91dHB1dDogaHRtbF9ub3RlYm9vaw0KLS0tDQoNCmBgYHtyIHNldHVwLCBpbmNsdWRlPUZBTFNFfQ0Ka25pdHI6Om9wdHNfY2h1bmskc2V0KGVjaG8gPSBUUlVFKQ0KYGBgDQoNCiMgQW7hbGlzZSBU4XhpIE5ZDQoNCjxwPkRlc2NyaefjbyBkbyBleGVyY+1jaW88L3A+DQoNCiMjIDEgLSBFbnRlbmRpbWVudG8gLyBEZXNjcmnn428gZG8gRGF0YXNldA0KDQoNCg0KDQoNCg0KDQoNCg0K</div>
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIlBhcnRlIDEgLSBBbuFsaXNlIGRvIERhdGFzZXQiDQphdXRob3I6ICJBZHJpYW5hIE1hdHN1YmFyYSwgQnJ1bm8gQXF1aW5vLCBSYWZhZWwgQnVlbm8sIFZpbmljaXVzIFNjaW1pb25pIg0KZGF0ZTogIjIxIGRlIG1haW8gZGUgMjAxOCINCm91dHB1dDogaHRtbF9ub3RlYm9vaw0KLS0tDQoNCmBgYHtyIHNldHVwLCBpbmNsdWRlPUZBTFNFfQ0Ka25pdHI6Om9wdHNfY2h1bmskc2V0KGVjaG8gPSBUUlVFKQ0KYGBgDQoNCiMgQW7hbGlzZSBU4XhpIE5ZDQoNCjxwPg0KRGVzY3Jp5+NvIGRvIGV4ZXJj7WNpbw0KPC9wPg0KQ2FycmVnYXIgYXMgImxpYnJhcmllcyIgYSBzZXJlbSB1dGlsaXphZGFzOg0KDQpgYGB7cn0NCmxpYnJhcnkobWFncml0dHIpICMgcXVhbmRvIGRlciBwcm9ibGVtYSBjb20gbyAiJT4lIg0KbGlicmFyeSgnZHBseXInKSAjIHNlbGVjYW8gZSBmaWx0cm8gZGUgZGFkb3MNCmxpYnJhcnkoJ2dlb3NwaGVyZScpICMgbG9jYWxpemFjYW8gZ2VvZXNwYWNpYWwNCmxpYnJhcnkobHVicmlkYXRlKSAjIGRhdGFzLCBmdW7n9WVzIGhvdXIsIG1vbnRoLCB3ZGF5DQpsaWJyYXJ5KHBsb3RseSkgIyBwbG90IGRvcyBncuFmaWNvcw0KbGlicmFyeShrbml0cikgIyB1c2FkYSBwZWxvIHBsb3RseQ0KbGlicmFyeShkdW1taWVzKSAjIGNyaWEgY29sdW5hcyBiaW7hcmlhcyBwYXJhIHZhcmnhdmVpcyBjYXRlZ/NyaWNhcw0KbGlicmFyeShzY2FsZXMpICMgbm9ybWFsaXphIGRhZG9zIHJlc2NhbGFuZG8gcGFyYSBmbG9hdCBkZSAwIGEgMQ0KbGlicmFyeShyYW5kb21Gb3Jlc3QpICMgY3JpYSByZWRlIG5ldXJhbCBwYXJhIGNyaWFyIHJlZ3Jlc3PjbyBkZSB0ZW1wbyBkZSB2aWFnZW0NCnNvdXJjZSgncHJlcHJvY2Vzc2luZy5SJykNCmBgYA0KDQoNCiMjIDEgLSBFbnRlbmRpbWVudG8gLyBEZXNjcmnn428gZG8gRGF0YXNldA0KDQpDYXJyZWdhciBvcyBkYXRhc2V0cw0KDQpgYGB7ciBpbmNsdWRlPUZBTFNFfQ0KdHJhaW4gPSByZWFkX2NzdigiZGF0YS90cmFpbi5jc3YiKQ0KdGVzdCA9IHJlYWRfY3N2KCJkYXRhL3Rlc3QuY3N2IikNCmBgYA0KDQpWZXJpZmljYXIgc2UgZXhpc3RlbSBudWxvcw0KDQpgYGB7cn0NCnN1bShpcy5uYSh0cmFpbikpDQpzdW0oaXMubmEodGVzdCkpDQpgYGANCg0KU3VtbWFyeSBkYXMgdGFiZWxhcw0KDQpgYGB7cn0NCnN1bW1hcnkodHJhaW4pDQpgYGANCg0KYGBge3J9DQpzdW1tYXJ5KHRlc3QpDQpgYGANCg0KVmFyaeF2ZWlzIGRlIERhdGENCg0KYGBge3J9DQp0cmFpbiRwaWNrdXBfaG91ciA8LSBob3VyKHRyYWluJHBpY2t1cF9kYXRldGltZSkNCnRyYWluJHBpY2t1cF93ZWVrIDwtIHdlZWsodHJhaW4kcGlja3VwX2RhdGV0aW1lKQ0KdHJhaW4kcGlja3VwX21vbnRoIDwtIG1vbnRoKHRyYWluJHBpY2t1cF9kYXRldGltZSkNCnRyYWluJHBpY2t1cF93ZWVrZGF5cyA8LSB3ZWVrZGF5cyh0cmFpbiRwaWNrdXBfZGF0ZXRpbWUpDQp0cmFpbiRwaWNrdXBfd2Vla2VuZCA8LSBpZmVsc2UodHJhaW4kcGlja3VwX3dlZWtkYXlzPT0xIHwgdHJhaW4kcGlja3VwX3dlZWtkYXlzPT03LCJXZWVrZW5kIiwibm90LVdlZWtlbmQiKQ0KDQp0cmFpbiA9IGFzLmRhdGEudGFibGUodHJhaW4pDQoNCnRyYWluWyxwaWNrdXBfZGF0ZXRpbWU6PWFzLkRhdGUocGlja3VwX2RhdGV0aW1lKV0NCnRyYWluWyxkcm9wb2ZmX2RhdGV0aW1lOj1hcy5EYXRlKGRyb3BvZmZfZGF0ZXRpbWUpXQ0KDQp0cmFpblssIjo9IigNCiAgIHBpY2t1cF95ZGF5PXlkYXkocGlja3VwX2RhdGV0aW1lKQ0KICAscGlja3VwX21kYXk9bWRheShwaWNrdXBfZGF0ZXRpbWUpDQopXQ0KYGBgDQoNCg0KYGBge3J9DQoNCmBgYA0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQo=</div>
 
 
 
