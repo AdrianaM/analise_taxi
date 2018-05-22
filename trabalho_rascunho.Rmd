@@ -2,7 +2,6 @@
 title: "R Notebook"
 output: html_notebook
 ---
-
 ```{r}
 library(magrittr) # quando der problema com o "%>%"
 library('dplyr') # selecao e filtro de dados
@@ -18,10 +17,17 @@ source('preprocessing.R')
 
 
 ```{r}
-train <- read.csv("train/train.csv")
+train <- read.csv("data_source/train.csv")
 
 # pega apenas as 10 primeiras linhas para teste
 df <- head(train, 10000)
+```
+
+bairro de saída
+```{r}
+df$bairro_saida = mapply(define_bairro, df$pickup_longitude, df$pickup_latitude)
+df$bairro_chegada = mapply(define_bairro, df$dropoff_longitude, df$dropoff_latitude)
+
 ```
 
 Adiciona distância Euclidiana calculada a partir das coordenadas (arquivo Preprocessing.R)
@@ -35,10 +41,10 @@ Adiciona distância de Manhattan calculada a partir das coordenadas (arquivo Prep
 ```{r}
 
 df$dist_manhattan = dist_manh(df)
-
+df$velocidade = df$dist_manhattan / df$trip_duration
 ```
 
-Prepara data e hora da partida (acho que não precisa da chegada)
+Prepara data e hora da paprtida (acho que não precisa da chegada)
 Com isso é possível pegar horário de pico e dia da semana
 
 ```{r}
@@ -55,9 +61,39 @@ df %>%
   filter(df$trip_duration < 10000) -> df
 ```
 
-Plotar correlação distancia tempo
+Quantidade de viagens por bairro de saída e chegada
 ```{r}
-plot_ly(data= df, x= ~dist_euclidiana, y= ~trip_duration, type = 'scatter', mode = 'markers')
+df %>%
+  group_by(bairro_saida) %>%
+  count() -> data_plot
+plot1 = plot_ly(data= data_plot, x= ~bairro_saida, y= ~n, type = 'bar')
+
+df %>%
+  group_by(bairro_chegada) %>%
+  count() -> data_plot
+plot2 = plot_ly(data= data_plot, x= ~bairro_chegada, y= ~n, type = 'bar')
+
+subplot(plot1, plot2, shareY = T)
+```
+Média da velocidade das viagens por bairro de saída e chegada
+```{r}
+df %>%
+  group_by(bairro_saida) %>%
+  summarize(velocidade_media = mean(velocidade),n()) -> data_plot
+plot1 = plot_ly(data= data_plot, x= ~bairro_saida, y= ~velocidade_media, type = 'bar')
+
+df %>%
+  group_by(bairro_chegada) %>%
+  summarize(velocidade_media = mean(velocidade),n()) -> data_plot
+plot2 = plot_ly(data= data_plot, x= ~bairro_chegada, y= ~velocidade_media, type = 'bar')
+
+subplot(plot1, plot2, shareY = T)
+```
+
+
+Plotar correlação passageiros tempo
+```{r}
+plot_ly(data= df, x= ~passenger_count, y= ~trip_duration, type = 'scatter', mode = 'markers')
 ```
 
 Plotar correlação distancia tempo manhatan
@@ -65,20 +101,32 @@ Plotar correlação distancia tempo manhatan
 plot_ly(data= df, x= ~dist_manhattan, y= ~trip_duration, type = 'scatter', mode = 'markers')
 ```
 
-Média da duração das viagens por hora
+Média da velocidade das viagens por hora
 ```{r}
 df %>%
   group_by(pickup_hour) %>%
-  summarize(mean_trip_duration = mean(trip_duration),n()) -> data_plot
-plot_ly(data= data_plot, x= ~pickup_hour, y= ~mean_trip_duration, type = 'bar')
+  summarize(velocidade_media = mean(velocidade),n()) -> data_plot1
+plot1 = plot_ly(data= data_plot1, x= ~pickup_hour, y= ~velocidade_media, type = 'bar')
+df %>%
+  group_by(pickup_weekdays) %>%
+  summarize(velocidade_media = mean(velocidade),n()) -> data_plot2
+plot2 = plot_ly(data= data_plot2, x= ~pickup_weekdays, y= ~velocidade_media, type = 'bar')
+
+subplot(plot1, plot2, shareY = T)
 ```
 
 Quantidade de viagens por hora
 ```{r}
 df %>%
   group_by(pickup_hour) %>%
-  count() -> data_plot
-plot_ly(data= data_plot, x= ~pickup_hour, y= ~n, type = 'bar')
+  count() -> data_plot1
+plot1 = plot_ly(data= data_plot1, x= ~pickup_hour, y= ~n, type = 'bar')
+df %>%
+  group_by(pickup_weekdays) %>%
+  count() -> data_plot2
+plot2 = plot_ly(data= data_plot2, x= ~pickup_weekdays, y= ~n, type = 'bar')
+
+subplot(plot1, plot2)
 ```
 
 Normalizar dados para a análise
