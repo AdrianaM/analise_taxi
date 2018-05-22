@@ -1,4 +1,5 @@
-source_data/
+test.csv
+train.csv
 
 # History files
 .Rhistory
