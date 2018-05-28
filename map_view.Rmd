@@ -1,0 +1,17 @@
+---
+title: "mapa_view"
+output: html_document
+---
+````{r}
+library(dplyr)
+library(leaflet)
+
+
+set.seed(1234)
+foo <- sample_n(train, 8e3)
+
+leaflet(data = foo) %>% addProviderTiles("Esri.NatGeoWorldMap") %>%
+  addCircleMarkers(~ pickup_longitude, ~pickup_latitude, radius = 1,
+                   color = "blue", fillOpacity = 0.3)
+
+````
