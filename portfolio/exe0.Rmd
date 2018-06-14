@@ -1,0 +1,24 @@
+---
+title: "exe1"
+author: "vinicius"
+date: "25 de abril de 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+x = seq(from=-5, to =5, length.out = 1000)
+
+y = dnorm (x)
+
+plot_ly(x=x,y=y,type = "histogram")
+```
+
+```{r setup, include=FALSE}
+library(plotly)
+p <- plot_ly(x = ~rnorm(50), type = "histogram")
+
+# Create a shareable link to your chart
+# Set up API credentials: https://plot.ly/r/getting-started
+chart_link = api_create(p, filename="histogram-basic")
+chart_link
+```

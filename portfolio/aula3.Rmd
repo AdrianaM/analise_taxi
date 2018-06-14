@@ -1,0 +1,85 @@
+---
+title: "aula3"
+runtime: shiny
+output: html_document
+---
+
+1 - Gerar dos dados para o modelo linear descrito: 
+
+- Considerar 100 Observações
+- Lembrar de "colocar a semente"
+- Plotar o resultado 
+
+```{r}
+
+library(plotly)
+
+set.seed(18)
+
+x = rnorm(100, 0, sd=1)
+error = rnorm(100, 0, sd=2)
+y = 0.5 + 2*x + error
+
+plot_ly(x = x , y = y, type ='scatter')
+
+```
+
+2 - Amostra de uma base de dados
+
+Avaliar o data.frame 'airquality'
+
+  - Obter as dimensões deste data.frame
+  - Obter o resumo de todas as colunas 
+  - Exibir uma amostra dos 10 primeiros registros 
+  - Exibir uma amostra com 10 linhas aleatórias
+    - lembre-se de definir a semente para obter sempre o mesmo resultado 
+    
+```{r}
+
+df = airquality
+
+dim(df)
+
+summary(df)
+
+head(df, 10)
+
+set.seed(2)
+
+n_10 = sample(1:153, size=10)
+df[n_10,]
+
+```
+
+3 - Loop Acumulado
+
+Criar um Script que varre o dataset 'AirPassengers'
+  - Observe que este dataset não é matrix, table ou data.frame, mas um TimeSeries
+  
+Crie um vetor que contenha o valor acumulado de passageiros ao longo do tempo.
+
+```{r}
+
+df = as.matrix(AirPassengers)
+#dim(as.matrix(df))
+#summary(df)
+#head(df, 10)
+pass = c(0)
+pass2 = c(0)
+
+for(i in 1:length(df)){
+  pass[i] = df[i]
+}
+
+j=1
+for(row in df){
+  pass2[j]=sum(df[1:j])
+  j=j+1
+}
+```
+
+
+4 - Criar uma função Fatorial 
+
+
+
