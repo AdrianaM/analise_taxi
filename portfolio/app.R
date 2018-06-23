@@ -14,6 +14,8 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                   
                   #conteudo da sidebar
                   sidebarPanel(
+                    
+                    #choose a file
                     selectInput("fileName", 
                                 label = "Selecione uma Aula para Download",
                                 choices = c("-",
@@ -21,8 +23,9 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                                             "Aula 2: Vetores e Matrizes",
                                             "Aula 3: Amostras e Simulacoes"
                                 ),
-                                selected = "-")
-                    #downloadButton('downloadData', label = "Donwload")
+                                selected = "-"),
+                    # Button
+                    downloadButton("downloadData", "Download")
                   ),  
                   
                   
@@ -57,9 +60,24 @@ server <- function(input, output, session) {
   
   output$rdata <- renderTable(
     switch (input$fileName,
-            "Aula 1: Introducao ao R" = save(df,file = 'aula1_rdata.RData')
+            "Aula 1: Introducao ao R" = includeMarkdown("aula1.RData")
     )
   )
+  
+  # Downloadable csv of selected dataset ----
+  output$downloadData <- downloadHandler(
+    filename = function() {
+      switch (input$fileName,
+              "Aula 1: Introducao ao R" = paste('aula1.Rmd'),
+              "Aula 2: Vetores e Matrizes" = paste('aula2.Rmd'),
+              "Aula 3: Amostras e Simulacoes" = paste('aula3.Rmd')
+      )
+    },
+    content = function(file) {
+      write_file(datasetInput(), file, row.names = FALSE)
+    }
+  )
+  
 }
 
 shinyApp(ui, server)
