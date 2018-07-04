@@ -40,7 +40,13 @@ df$dist_euclidiana = dist_eucl(df)
 
 ```
 
+<<<<<<< HEAD
 ## Adiciona dist?ncia de Manhattan calculada a partir das coordenadas (arquivo Preprocessing.R)
+=======
+
+
+## Adiciona distância de Manhattan calculada a partir das coordenadas (arquivo Preprocessing.R)
+>>>>>>> b55202b5a477884bb84b53677033b358de63060c
 ```{r}
 
 df$dist_manhattan = dist_manh(df)
@@ -104,7 +110,11 @@ subplot(plot1, plot2, shareY = T)
 ```{r}
 p1 = plot_ly(data= df, x= ~passenger_count, y= ~trip_duration, type = 'scatter', mode = 'markers') 
 p2 = plot_ly(data= df, x= ~dist_manhattan, y= ~trip_duration, type = 'scatter', mode = 'markers') %>% 
+<<<<<<< HEAD
   layout(title="Correla??o Num. Passageiros vs. Tempo   |   Correla??o Dist?ncia vs. Tempo")
+=======
+  layout(title="Correlacao Num. Passageiros vs. Tempo   |   Correlacao Distancia vs. Tempo")
+>>>>>>> b55202b5a477884bb84b53677033b358de63060c
 subplot(p1, p2)
 ```
 
@@ -113,11 +123,11 @@ subplot(p1, p2)
 df %>%
   group_by(pickup_hour) %>%
   summarize(velocidade_media = mean(velocidade),n()) -> data_plot1
-plot1 = plot_ly(data= data_plot1, x= ~pickup_hour, y= ~velocidade_media, type = 'bar')
+plot1 = plot_ly(data= data_plot1, x= ~pickup_hour, y= ~velocidade_media, type = 'scatter', mode='lines')
 df %>%
   group_by(pickup_weekdays) %>%
   summarize(velocidade_media = mean(velocidade),n()) -> data_plot2
-plot2 = plot_ly(data= data_plot2, x= ~pickup_weekdays, y= ~velocidade_media, type = 'bar') %>% 
+plot2 = plot_ly(data= data_plot2, x= ~pickup_weekdays, y= ~velocidade_media, type = 'scatter', mode='lines') %>% 
   layout(title="Horas       |        Dias da Semana") 
 
 subplot(plot1, plot2, shareY = T)
@@ -140,7 +150,12 @@ subplot(plot1, plot2)
 
 ## Plota mapa de calor de New York com ponto de partida da viagem
 ```{r message=FALSE, warning=FALSE}
-heat_map_taxi(train)
+heat_map_taxi(train, "pickup")
+```
+
+## Plota mapa de calor de New York com ponto de chegada da viagem
+```{r message=FALSE, warning=FALSE}
+heat_map_taxi(train, "dropoff")
 ```
 
 # Normalizar dados para o modelo
