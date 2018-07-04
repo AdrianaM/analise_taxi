@@ -1,0 +1,10 @@
+---
+title: "enrq1"
+output: html_document
+---
+
+```{r}
+
+train <- read.csv("data_source/train.csv")
+
+```

@@ -1,17 +1,17 @@
 ---
-title: "Trabalho final de R do grupo: Adriana, Bruno, Rafael e Vinícius"
+title: "Trabalho final de R do grupo: Adriana, Bruno, Rafael e Vin?cius"
 output: html_notebook
 ---
 ```{r}
 library(magrittr) # quando der problema com o "%>%"
 library('dplyr') # selecao e filtro de dados
 library('geosphere') # localizacao geoespacial
-library(lubridate) # datas, funções hour, month, wday
-library(plotly) # plot dos gráficos
+library(lubridate) # datas, fun??es hour, month, wday
+library(plotly) # plot dos gr?ficos
 library(knitr) # usada pelo plotly
-library(dummies) # cria colunas binárias para variáveis categóricas
+library(dummies) # cria colunas bin?rias para vari?veis categ?ricas
 library(scales) # normaliza dados rescalando para float de 0 a 1
-library(randomForest) # cria rede neural para criar regressão de tempo de viagem
+library(randomForest) # cria rede neural para criar regress?o de tempo de viagem
 source('preprocessing.R')
 source('mapa_calor_ny.R')
 ```
@@ -24,31 +24,31 @@ train <- read.csv("data_source/train.csv")
 df <- head(train, 10000)
 ```
 
-# Preparação dos dados
+# Prepara??o dos dados
 
-## Região de saída
+## Regi?o de sa?da
 ```{r}
 df$bairro_saida = mapply(define_bairro, df$pickup_longitude, df$pickup_latitude)
 df$bairro_chegada = mapply(define_bairro, df$dropoff_longitude, df$dropoff_latitude)
 
 ```
 
-## Adiciona distância Euclidiana calculada a partir das coordenadas (arquivo Preprocessing.R)
+## Adiciona dist?ncia Euclidiana calculada a partir das coordenadas (arquivo Preprocessing.R)
 ```{r}
 
 df$dist_euclidiana = dist_eucl(df)
 
 ```
 
-## Adiciona distância de Manhattan calculada a partir das coordenadas (arquivo Preprocessing.R)
+## Adiciona dist?ncia de Manhattan calculada a partir das coordenadas (arquivo Preprocessing.R)
 ```{r}
 
 df$dist_manhattan = dist_manh(df)
 df$velocidade = df$dist_manhattan / df$trip_duration
 ```
 
-## Prepara data e hora da paprtida (acho que não precisa da chegada)
-## Com isso é possível pegar horário de pico e dia da semana
+## Prepara data e hora da paprtida (acho que n?o precisa da chegada)
+## Com isso ? poss?vel pegar hor?rio de pico e dia da semana
 
 ```{r}
 df$pickup_hour <- hour(df$pickup_datetime)
@@ -64,13 +64,13 @@ df %>%
   filter(df$trip_duration < 10000) -> df
 ```
 
-# Análises descritivas
+# An?lises descritivas
 
-## Divisão das regiões que separamos em NY:
-![Regiões NY](regioes_ny.jpg)
+## Divis?o das regi?es que separamos em NY:
+![Regi?es NY](regioes_ny.jpg)
 
 
-## Quantidade de viagens por região de saída e chegada
+## Quantidade de viagens por regi?o de sa?da e chegada
 ```{r}
 df %>%
   group_by(bairro_saida) %>%
@@ -84,7 +84,7 @@ plot2 = plot_ly(data= data_plot, x= ~bairro_chegada, y= ~n, type = 'bar')
 
 subplot(plot1, plot2, shareY = T)
 ```
-## Média da velocidade das viagens por região de saída e chegada
+## M?dia da velocidade das viagens por regi?o de sa?da e chegada
 ```{r}
 df %>%
   group_by(bairro_saida) %>%
@@ -100,15 +100,15 @@ subplot(plot1, plot2, shareY = T)
 ```
 
 
-## Plotar correlação passageiros tempo
+## Plotar correla??o passageiros tempo
 ```{r}
 p1 = plot_ly(data= df, x= ~passenger_count, y= ~trip_duration, type = 'scatter', mode = 'markers') 
 p2 = plot_ly(data= df, x= ~dist_manhattan, y= ~trip_duration, type = 'scatter', mode = 'markers') %>% 
-  layout(title="Correlação Num. Passageiros vs. Tempo   |   Correlação Distância vs. Tempo")
+  layout(title="Correla??o Num. Passageiros vs. Tempo   |   Correla??o Dist?ncia vs. Tempo")
 subplot(p1, p2)
 ```
 
-## Média da velocidade das viagens por hora e dia da semana
+## M?dia da velocidade das viagens por hora e dia da semana
 ```{r}
 df %>%
   group_by(pickup_hour) %>%
@@ -145,7 +145,7 @@ heat_map_taxi(train)
 
 # Normalizar dados para o modelo
 
-## Primeiro, criando variáveis dummies para dia da semana e hora
+## Primeiro, criando vari?veis dummies para dia da semana e hora
 ```{r}
 week_dummy = dummy(df$pickup_weekdays, sep='_')
 hour_dummy = dummy(df$pickup_hour, sep='_')
@@ -154,7 +154,7 @@ bairro_dummy = dummy(df$bairro_chegada, sep='_')
 df = data.frame(cbind(df, week_dummy, hour_dummy, bairro_dummy))
 ```
 
-## Agora normalizando com Min Max Scaler as variáveis: distância, trip_duration e passenger_count
+## Agora normalizando com Min Max Scaler as vari?veis: dist?ncia, trip_duration e passenger_count
 ```{r}
 df$dist_manhattan = rescale(df$dist_manhattan)
 df$trip_duration = rescale(df$trip_duration)
@@ -176,7 +176,7 @@ X <- df[c('passenger_count', 'dist_manhattan', 'pickup_weekdays_1', 'pickup_week
 y <- df['trip_duration']
 ```
 
-## Cria modelo random forest para previsão de tempo de duração das viagens (trip_duration)
+## Cria modelo random forest para previs?o de tempo de dura??o das viagens (trip_duration)
 ```{r}
 f = create_formula(X)
 fit <- randomForest(f, df, importance=TRUE, ntree=200)
