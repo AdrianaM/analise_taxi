@@ -6,7 +6,11 @@ library(leaflet)
 library(magrittr)
 library(sp)
 
-heat_map_taxi <- function(train){
+heat_map_taxi <- function(train, pic_drop){
+  
+  # train: DF com os dados de treino
+  # pic_drop: seleciona se é partida ou chegada da viagem ('pickup' ou 'dropoff')
+  
   # retirado de https://data.cityofnewyork.us/City-Government/Borough-Boundaries/tqmj-j8zm/data
   # e https://www.kaggle.com/davidgibsonp/nyc-shape-file-ggplot-map
   # carrega shape de Nwe York
@@ -21,8 +25,8 @@ heat_map_taxi <- function(train){
   projection(r) <- CRS(proj4string(NY))  # give it the same projection as port
   g <- as(r, 'SpatialPolygonsDataFrame') 
   
-  # seleciona se é partida ou chegada da viagem ('pickup' ou 'dropoff')
-  pic_drop = 'pickup'
+  
+  
   
   # Pega uma amostra da base e seleciona as colunas
   coords = train[c(paste(pic_drop,'_longitude', sep=''), paste(pic_drop,'_latitude', sep=''))]
