@@ -1,11 +1,13 @@
 ---
-title: "Trabalho final de R do grupo: Adriana, Bruno, Rafael e Vin?cius"
-output: html_notebook
+title: 'Trabalho final de R do grupo: Adriana, Bruno, Rafael e Vin?cius'
+output:
+  html_document:
+    df_print: paged
 ---
 ```{r}
 library(magrittr) # quando der problema com o "%>%"
-library('dplyr') # selecao e filtro de dados
-library('geosphere') # localizacao geoespacial
+library(dplyr) # selecao e filtro de dados
+library(geosphere) # localizacao geoespacial
 library(lubridate) # datas, fun??es hour, month, wday
 library(plotly) # plot dos gr?ficos
 library(knitr) # usada pelo plotly
@@ -18,10 +20,16 @@ source('mapa_calor_ny.R')
 
 
 ```{r}
-train <- read.csv("data_source/train.csv")
+train <- read.csv("./data_source/train.csv")
+```
+
+```{r}
+set.seed(2)
+train %>%
+  head(10000)->df
 
 # pega apenas as 10 primeiras linhas para teste
-df <- head(train, 10000)
+head(df, 10)
 ```
 
 # Prepara??o dos dados
@@ -35,20 +43,12 @@ df$bairro_chegada = mapply(define_bairro, df$dropoff_longitude, df$dropoff_latit
 
 ## Adiciona dist?ncia Euclidiana calculada a partir das coordenadas (arquivo Preprocessing.R)
 ```{r}
-
+#Distancia em KM
 df$dist_euclidiana = dist_eucl(df)
-
 ```
 
-<<<<<<< HEAD
 ## Adiciona dist?ncia de Manhattan calculada a partir das coordenadas (arquivo Preprocessing.R)
-=======
-
-
-## Adiciona distância de Manhattan calculada a partir das coordenadas (arquivo Preprocessing.R)
->>>>>>> b55202b5a477884bb84b53677033b358de63060c
 ```{r}
-
 df$dist_manhattan = dist_manh(df)
 df$velocidade = df$dist_manhattan / df$trip_duration
 ```
@@ -90,6 +90,7 @@ plot2 = plot_ly(data= data_plot, x= ~bairro_chegada, y= ~n, type = 'bar')
 
 subplot(plot1, plot2, shareY = T)
 ```
+
 ## M?dia da velocidade das viagens por regi?o de sa?da e chegada
 ```{r}
 df %>%
@@ -106,15 +107,11 @@ subplot(plot1, plot2, shareY = T)
 ```
 
 
-## Plotar correla??o passageiros tempo
+## Plotar correlacao passageiros tempo
 ```{r}
 p1 = plot_ly(data= df, x= ~passenger_count, y= ~trip_duration, type = 'scatter', mode = 'markers') 
 p2 = plot_ly(data= df, x= ~dist_manhattan, y= ~trip_duration, type = 'scatter', mode = 'markers') %>% 
-<<<<<<< HEAD
-  layout(title="Correla??o Num. Passageiros vs. Tempo   |   Correla??o Dist?ncia vs. Tempo")
-=======
   layout(title="Correlacao Num. Passageiros vs. Tempo   |   Correlacao Distancia vs. Tempo")
->>>>>>> b55202b5a477884bb84b53677033b358de63060c
 subplot(p1, p2)
 ```
 

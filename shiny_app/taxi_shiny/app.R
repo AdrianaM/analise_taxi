@@ -1,16 +1,27 @@
+#Bibliotecas de uso
+library(magrittr) # quando der problema com o "%>%"
+library(dplyr) # selecao e filtro de dados
+library(geosphere) # localizacao geoespacial
+library(lubridate) # datas, fun??es hour, month, wday
+library(plotly) # plot dos gr?ficos
+library(knitr) # usada pelo plotly
+library(dummies) # cria colunas bin?rias para vari?veis categ?ricas
+library(scales) # normaliza dados rescalando para float de 0 a 1
+library(randomForest) # cria rede neural para criar regress?o de tempo de viagem
+#source('./analise_taxi/preprocessing.R')
+#source('mapa_calor_ny.R')
 library(shinydashboard)
 
+#Skin do Shiny dashboard
 skin <- Sys.getenv("DASHBOARD_SKIN")
 skin <- tolower(skin)
 if (skin == "")
   skin <- "blue"
 
-
 sidebar <- dashboardSidebar(
-  #sidebarSearchForm(label = "Search...", "searchText", "searchButton"),
+  
   sidebarMenu(
-    #menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-    #menuItem("Widgets", icon = icon("th"), tabName = "widgets", badgeLabel = "new",badgeColor = "green"),
+    
     menuItem("Análise Inicial", icon = icon("database"),
              menuSubItem("Sumarização", tabName = "analise1"),
              menuSubItem("Horários das Corridas", tabName = "analise2"),
@@ -31,7 +42,8 @@ sidebar <- dashboardSidebar(
     ),
     menuItem("Mapa de Calor", icon = icon("map"),
              menuSubItem("Pontos de Saída", tabName = "heatmap1"),
-             menuSubItem("Pontos de Chegada", tabName = "heatmap2")
+             menuSubItem("Pontos de Chegada", tabName = "heatmap2"),
+             menuSubItem("Mapa de Calor NY", tabName = "heatmap3")
     ),
     menuItem("Análises Gráficas", icon = icon("signal"),
              menuSubItem("Linha Temporal Mês", tabName = "analise_grafica1"),
@@ -45,88 +57,34 @@ sidebar <- dashboardSidebar(
     ),
     menuItem("Sobre os Alunos", tabName='alunos', icon = icon("users")
     )
-    #,menuItem("Source code for app", icon = icon("file-code-o"),href = "https://github.com/rstudio/shinydashboard/blob/gh-pages/_apps/sidebar/app.R")
   )
 )
 
 body <- dashboardBody(
   tabItems(
-    tabItem("widgets",
-            fluidRow(
-              box(
-                title = "Distribution",
-                status = "primary",
-                plotOutput("plot1", height = 280),
-                height = 300
-              ),
-              tabBox(
-                height = 300,
-                tabPanel("View 1",
-                         plotOutput("scatter1", height = 230)
-                ),
-                tabPanel("View 2",
-                         plotOutput("scatter2", height = 230)
-                )
-              )
-            ),
-            
-            # Boxes with solid headers
-            fluidRow(
-              box(
-                title = "Histogram control", width = 4, solidHeader = TRUE, status = "primary",
-                sliderInput("count", "Count", min = 1, max = 500, value = 120)
-              ),
-              box(
-                title = "Appearance",
-                width = 4, solidHeader = TRUE,
-                radioButtons("fill", "Fill", # inline = TRUE,
-                             c(None = "none", Blue = "blue", Black = "black", red = "red")
-                )
-              ),
-              box(
-                title = "Scatterplot control",
-                width = 4, solidHeader = TRUE, status = "warning",
-                selectInput("spread", "Spread",
-                            choices = c("0%" = 0, "20%" = 20, "40%" = 40, "60%" = 60, "80%" = 80, "100%" = 100),
-                            selected = "60"
-                )
-              )
-            ),
-            
-            # Solid backgrounds
-            fluidRow(
-              box(
-                title = "Title 4",
-                width = 4,
-                background = "black",
-                "A box with a solid black background"
-              ),
-              box(
-                title = "Title 5",
-                width = 4,
-                background = "light-blue",
-                "A box with a solid light-blue background"
-              ),
-              box(
-                title = "Title 6",
-                width = 4,
-                background = "maroon",
-                "A box with a solid maroon background"
-              )
-              
-            )
-    ),
+    
+    #Tabs de Analise inicial
+    #Sumarização do DataSet
+    tabItem("analise1",fluidRow(
+      title="Sumarização do Dataset",
+      sidebarLayout(
+        sidebarPanel(textOutput('rows_out')),
+        mainPanel(dataTableOutput('table1')),
+        position = 'right'
+      ))),
+
+    #Horario das Corridas
+    tabItem("analise2",includeHTML('analise1.HTML')),
+    
+    
+    tabItem("analise3",paste("Origens em Função Horário")),
+    tabItem("analise4",paste("Destinos em Função Horário")),
+    tabItem("analise5",paste("Tempo Médio de Viagem")),
+    
     #Tabs de Enriquecimento
     tabItem("enrq1",paste("Distâncias")),
     tabItem("enrq2",paste("Quadrantes no Mapa")),
     tabItem("enrq3",paste("Pontos de Interesse")),
-    
-    #Tabs de Analise inicial
-    tabItem("analise1",paste("Sumarização")),
-    tabItem("analise2",paste("Horários das Corridas")),
-    tabItem("analise3",paste("Origens em Função Horário")),
-    tabItem("analise4",paste("Destinos em Função Horário")),
-    tabItem("analise5",paste("Tempo Médio de Viagem")),
     
     #tabs de Minidataset
     tabItem("minidf1",paste("Subdaset: Aeroporto")),
@@ -137,6 +95,7 @@ body <- dashboardBody(
     #tabs de Mapas de Calor
     tabItem("heatmap1",paste("Pontos de Saída")),
     tabItem("heatmap2",paste("Pontos de Chegada")),
+    tabItem("heatmap3",paste("Heatmap Ny")),
     
     #tab de analises Gráficas
     tabItem("analise_grafica1",paste("Line Plot Mês")),
@@ -152,95 +111,32 @@ body <- dashboardBody(
   )
 )
 
-messages <- dropdownMenu(type = "messages",
-                         messageItem(
-                           from = "Sales Dept",
-                           message = "Sales are steady this month."
-                         ),
-                         messageItem(
-                           from = "New User",
-                           message = "How do I register?",
-                           icon = icon("question"),
-                           time = "13:45"
-                         ),
-                         messageItem(
-                           from = "Support",
-                           message = "The new server is ready.",
-                           icon = icon("life-ring"),
-                           time = "2014-12-01"
-                         )
-)
-
-notifications <- dropdownMenu(type = "notifications", badgeStatus = "warning",
-                              notificationItem(
-                                text = "5 new users today",
-                                icon("users")
-                              ),
-                              notificationItem(
-                                text = "12 items delivered",
-                                icon("truck"),
-                                status = "success"
-                              ),
-                              notificationItem(
-                                text = "Server load at 86%",
-                                icon = icon("exclamation-triangle"),
-                                status = "warning"
-                              )
-)
-
-tasks <- dropdownMenu(type = "tasks", badgeStatus = "success",
-                      taskItem(value = 90, color = "green",
-                               "Documentation"
-                      ),
-                      taskItem(value = 17, color = "aqua",
-                               "Project X"
-                      ),
-                      taskItem(value = 75, color = "yellow",
-                               "Server deployment"
-                      ),
-                      taskItem(value = 80, color = "red",
-                               "Overall project"
-                      )
-)
-
 header <- dashboardHeader(
   title = "Projeto Taxi - R"
-  #messages,
-  #notifications,
-  #tasks
 )
 
 ui <- dashboardPage(header, sidebar, body, skin = skin)
 
 server <- function(input, output) {
   
-  set.seed(122)
-  histdata <- rnorm(500)
+  #Load do RData com o full dataset
+  load('C:/Users/Vinicius Simioni/Documents/FIAP/Projeto Taxi NY/train_test.RData')
+ 
+  output$table1 <- renderPlot({
+    summary(train)
+  })
   
   output$plot1 <- renderPlot({
-    if (is.null(input$count) || is.null(input$fill))
-      return()
-    
-    data <- histdata[seq(1, input$count)]
-    color <- input$fill
-    if (color == "none")
-      color <- NULL
-    hist(data, col = color, main = NULL)
+    train %>%
+      mutate(hpick = hour(pickup_datetime)) %>%
+      group_by(hpick, vendor_id) %>%
+      count() %>%
+      ggplot(aes(hpick, n, color = vendor_id)) +
+      geom_point(size = 4) +
+      labs(x = "Hour of the day", y = "Total number of pickups") +
+      theme(legend.position = "none")
   })
   
-  output$scatter1 <- renderPlot({
-    spread <- as.numeric(input$spread) / 100
-    x <- rnorm(1000)
-    y <- x + rnorm(1000) * spread
-    plot(x, y, pch = ".", col = "blue")
-  })
-  
-  output$scatter2 <- renderPlot({
-    spread <- as.numeric(input$spread) / 100
-    x <- rnorm(1000)
-    y <- x + rnorm(1000) * spread
-    plot(x, y, pch = ".", col = "red")
-  })
 }
 
 shinyApp(ui, server)

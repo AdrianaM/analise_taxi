@@ -10,7 +10,7 @@ dist_eucl <- function(df){
   df %>% 
     dplyr::select(dropoff_longitude, dropoff_latitude) -> df$coordenada_chegada
   
-  # Distancia euclidiana (considerando a curvatura da Terra como uma esfera)
+  # Distancia euclidiana (considerando a curvatura da Terra como uma esfera) em km
   distCosine(df$coordenada_partida, df$coordenada_chegada) / 1000
 }
 
@@ -33,7 +33,7 @@ dist_manh <- function(df){
   
   distCosine(df$coordenada_partida_latitude_fixa, df$coordenada_chegada_latitude_fixa)  -> df$delta_manhattan_latitude_fixa
   
-  # Passo 4 - Somar os deltas obtidos 
+  # Passo 4 - Somar os deltas obtidos em km
   (df$delta_manhattan_latitude_fixa + df$delta_manhattan_longitude_fixa) / 1000
 
 }

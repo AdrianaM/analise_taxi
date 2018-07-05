@@ -9,7 +9,7 @@ library(leaflet)
 
 set.seed(1234)
 foo <- sample_n(train, 8e3)
-df_ny <- read.csv(file="./analise_taxi/new_york_historic_places.csv", header=TRUE, sep=",")
+df_ny <- read.csv(file="./new_york_historic_places.csv", header=TRUE, sep=",")
 
 leaflet(data = foo) %>% 
   addProviderTiles("Esri.NatGeoWorldMap") %>%
@@ -24,3 +24,26 @@ leaflet(data = df_ny) %>%
     addCircleMarkers(df_ny$Longitude, df_ny$Latitude, radius = .5, color = 'red', fillOpacity = 0.3)
 
 ```
+
+```{r}
+df_1 = read.csv('./data_source/facilities-v1.csv')
+
+```
+
+```{r}
+df_1 %>% 
+  filter(city=='New York',facgroup=='Historical Sites') -> df_1_ny
+```
+
+
+```{r}
+distinct_df = #df_1_ny %>% distinct(facgroup)
+              df_1_ny %>% count(facsubgrp)
+```
+
+```{r}
+leaflet(data = df_1_ny) %>%
+    addProviderTiles("Esri.NatGeoWorldMap") %>%
+    addCircleMarkers(df_1_ny$longitude, df_1_ny$latitude, radius = .5, color = 'red', fillOpacity = 0.3)
+```
+
