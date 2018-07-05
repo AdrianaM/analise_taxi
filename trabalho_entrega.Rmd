@@ -202,4 +202,16 @@ fit <- randomForest(f, df, importance=TRUE, ntree=200)
 varImpPlot(fit)
 ```
 
+```{r}
+head(df, 10)
+```
+
+```{r}
+dados <- df[, c("trip_duration", "dist_euclidiana")]
+normalized <-(dados-min(dados))/(max(dados)-min(dados))
+
+clusters <- kmeans(normalized, centers = 3)
+plot(normalized, col=clusters$cluster, pch=21, cex=1)
+```
+
 
