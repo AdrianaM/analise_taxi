@@ -20,15 +20,22 @@ source('mapa_calor_ny.R')
 
 
 ```{r}
-train <- read.csv("./data_source/train.csv")
+read.csv("./data_source/train.csv") %>% 
+  as.data.frame() -> train
 ```
 
 ```{r}
-set.seed(2)
-train %>%
-  head(10000)->df
+head(train, 10)
+```
 
-# pega apenas as 10 primeiras linhas para teste
+```{r}
+set.seed(20)
+# Criando uma sequencia de 1 ate a quantidade de total de linhas
+linhas.idx <- seq_len(nrow(train))
+# Obtendo aleatoriamente 10000 amostras de linhas do dataset
+linhas.sample <- sample(linhas.idx, 10000)
+# Amostra aleatoria com 10000 dados
+df <- train[linhas.sample, ]
 head(df, 10)
 ```
 
