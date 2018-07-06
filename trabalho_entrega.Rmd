@@ -62,7 +62,7 @@ summary(train)
 ### motivo: utilizar o dataset completo trava o RStudio em nossos equipamentos
 
 ```{r}
-set.seed(20)
+#set.seed(20)
 # Criando uma sequencia de 1 ate a quantidade de total de linhas
 linhas.idx <- seq_len(nrow(train))
 # Obtendo aleatoriamente 10000 amostras de linhas do dataset
@@ -243,43 +243,8 @@ boxplot(kmeans_data[, c("dist_euclidiana")], las=1, xlab=c("dist_euclidiana"))
 
 
 ```{r}
-x <- kmeans_data[, c("trip_duration")]
-y <- x[!x %in% boxplot.stats(x)$out]
-d <- boxplot(y, las=1, xlab="trip_duration")
-```
-
-
-```{r}
-d
-```
-
-
-## Tem muitos outliers!!! Removendo.
-
-```{r}
-remove_outliers <- function(x, na.rm = TRUE, ...) {
-  qnt <- quantile(x, probs=c(.25, .75), na.rm = na.rm, ...)
-  H <- 1.5 * IQR(x, na.rm = na.rm)
-  y <- x
-  y[x < (qnt[1] - H)] <- NA
-  y[x > (qnt[2] + H)] <- NA
-}
-remove_outliers(x, y, cval = NULL, 
-  method = c("en-masse", "bottom-up", "linear-regression"), 
-  delta = 0.7, n.start = 50, tsmethod.call = NULL, 
-  fdiff = NULL, logfile = NULL)
-```
-
-
-```{r}
-kmeans_no_outliers
-boxplot(kmeans_no_outliers[, c("trip_duration")], las=1, xlab="trip_duration")
-boxplot(kmeans_no_outliers[, c("dist_euclidiana")], las=1, xlab=c("dist_euclidiana"))
-```
-
-
-```{r}
-normalized <-(dados-min(dados))/(max(dados)-min(dados))
+#set.seed(3)
+normalized <-(kmeans_data-min(kmeans_data))/(max(kmeans_data)-min(kmeans_data))
 clusters <- kmeans(normalized, centers = 3)
 plot(normalized, col=clusters$cluster, pch=21, cex=1)
 ```
