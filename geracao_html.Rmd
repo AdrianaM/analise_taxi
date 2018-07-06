@@ -1,0 +1,31 @@
+---
+title: "Geração de HTML"
+output: html_notebook
+---
+
+# Markdown para Geracao dos HTMLs
+
+
+```{r}
+library(knitr)
+```
+
+
+
+```{r message=FALSE, warning=FALSE}
+knit('map_view.Rmd')
+```
+
+
+```{r message=FALSE, warning=FALSE}
+knit('plot_redq.Rmd')
+```
+
+
+
+```{r message=FALSE, warning=FALSE}
+knit('trabalho_entrega.Rmd')
+```
+
+
+

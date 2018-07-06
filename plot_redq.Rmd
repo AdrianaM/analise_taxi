@@ -2,24 +2,34 @@
 title: "plot_redq"
 output: html_document
 ---
+
 ```{r message=FALSE, warning=FALSE}
 library(dplyr)
 library(leaflet)
+library(lubridate)
+library(plotly)
+library(ggplot2)
+```
 
-df_redq_coord = read.csv('redq_coord.csv')
+
+```{r}
+df_redq_coord = read.csv('./data_source/redq_coord.csv')
 
 leaflet(data = df_redq_coord) %>% 
   addProviderTiles("Esri.NatGeoWorldMap") %>%
   addCircleMarkers(~longitude, ~latitude, radius = 1, color = "blue", fillOpacity = 0.3)
-
 ```
+
+
 ```{r}
 df_1 = read.csv('./data_source/facilities-v1.csv')
 df_1 %>% 
   filter(city=='New York') -> df_1_ny
 distinct_df = df_1_ny %>% count(facsubgrp)
 ```
-Pontos de metro de Ny
+
+
+## Pontos de metro de Ny
 
 ```{r}
 df_2 = read.csv('./data_source/NYC_Transit_Subway_Entrance_And_Exit_Data.csv')
@@ -60,7 +70,6 @@ df_2 %>%
 ## Mapa das corridas que começaram no quadrante
 
 ```{r}
-
 set.seed(22)
 # Criando uma sequencia de 1 ate a quantidade de total de linhas
 linhas.idx <- seq_len(nrow(df_pickup_dentroquadr))
@@ -72,11 +81,12 @@ df_pickup_dentroquadr[linhas.sample, ] -> df_pickup_dentroquadr_sample
 leaflet(data = df_pickup_dentroquadr_sample) %>% 
   addProviderTiles("Esri.NatGeoWorldMap") %>%
   addCircleMarkers(~ pickup_longitude, ~pickup_latitude, radius = 1, color = "blue", fillOpacity = 0.3)
-
 ```
+
 
 ## Mapa das corridas
 ### O pontos azuis são o inicio da corrida (pickup), os pontos vermelhos são as chegadas (dropoff) e os verde são pontos de interesse. 
+
 ```{r}
 df_ny_dentroquadr %>% 
   select('city','facname','facgroup')
@@ -84,7 +94,10 @@ df_ny_dentroquadr %>%
 df_nysubway_dentroquadr %>% 
   select('Station.Name','Station.Latitude','Station.Longitude')
 ```
+
+
 ## Plot no mapa com os pontos de pickup e dropoff. Também com pins de pontos de interesse dos aquivos de estações de metro de ny e facilities
+
 ```{r}
 set.seed(22)
 # Criando uma sequencia de 1 ate a quantidade de total de linhas
@@ -100,18 +113,13 @@ leaflet(data = df_dropoff_dentroquadr_sample) %>%
   addCircleMarkers(df_pickup_dentroquadr_sample$pickup_longitude, df_pickup_dentroquadr_sample$pickup_latitude, radius = 1, color = "blue", fillOpacity = 0.3) %>% 
   addMarkers(df_ny_dentroquadr$longitude, df_ny_dentroquadr$latitude,popup=df_ny_dentroquadr$facname) %>% 
   addMarkers(df_nysubway_dentroquadr$Station.Longitude, df_nysubway_dentroquadr$Station.Latitude,popup=df_nysubway_dentroquadr$Station.Name)
-
-
 ```
+
 
 ### Analises Básicas sobre minidaset
 ## As viagens que pegam os passageiros (pickoff, azul no grafico) tem uma concentração maior na entrada da Penn Station, pois provavelmente as pessoas estão pegando taxi vindo do transporte público.
 
-
 ```{r}
-library(plotly)
-library(ggplot2)
-
 # df_pickup_dentroquadr_sample %>%
 #   plot_ly(x=~trip_duration,type="histogram")
 # 
@@ -131,10 +139,6 @@ plot_ly(alpha = 0.5) %>%
 
 
 ```{r}
-library('ggplot2') # visualisation
-library('dplyr')
-library('lubridate')
-
 p1 <- df_pickup_dentroquadr_sample %>%
   group_by(passenger_count) %>%
   count() %>%
@@ -170,8 +174,8 @@ plot(p5)
 
 
 # Preparação dos dados
+
 ```{r message=FALSE, warning=FALSE}
-library(lubridate)
 source('preprocessing.R')
 
 ## Adiciona distância Euclidiana calculada a partir das coordenadas (arquivo Preprocessing.R)
@@ -189,17 +193,18 @@ df_pickup_dentroquadr_sample$pickup_month <- month(df_pickup_dentroquadr_sample$
 df_pickup_dentroquadr_sample$pickup_weekdays <- wday(df_pickup_dentroquadr_sample$pickup_datetime)
 ```
 
+
 ## Regração linear
 
 ```{r}
-
 linearMod <- lm(dropoff_lat ~ dropoff_lon, data=df_dropoff_dentroquadr_sample) 
 print(linearMod)
 
 linearMod <- lm(pickup_lat ~ pickup_lon, data=df_pickup_dentroquadr_sample) 
 print(linearMod)
-
 ```
+
+
 ## R2 da regração linear, o do pickup com maior valor, mais 'próximo' da reta. 
 
 ```{r}
@@ -208,6 +213,13 @@ summary(dropoff.lm)$r.squared
 
 pickup.lm = lm(pickup_lat ~ pickup_lon, data=df_pickup_dentroquadr_sample)
 summary(pickup.lm)$r.squared
+```
+
+
+# Criar o html
+
+```{r}
+knit('plot_redq.Rmd')
 ```
 
 
