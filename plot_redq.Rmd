@@ -2,7 +2,7 @@
 title: "plot_redq"
 output: html_document
 ---
-```{r}
+```{r message=FALSE, warning=FALSE}
 library(dplyr)
 library(leaflet)
 
@@ -12,6 +12,12 @@ leaflet(data = df_redq_coord) %>%
   addProviderTiles("Esri.NatGeoWorldMap") %>%
   addCircleMarkers(~longitude, ~latitude, radius = 1, color = "blue", fillOpacity = 0.3)
 
+```
+```{r}
+df_1 = read.csv('./data_source/facilities-v1.csv')
+df_1 %>% 
+  filter(city=='New York') -> df_1_ny
+distinct_df = df_1_ny %>% count(facsubgrp)
 ```
 
 
@@ -32,6 +38,12 @@ train %>%
   filter(dropoff_latitude<=df_redq_coord$latitude[[2]][[1]]) %>% 
   filter(dropoff_longitude>=df_redq_coord$longitude[[1]][[1]]) %>% 
   filter(dropoff_longitude<=df_redq_coord$longitude[[3]][[1]])-> df_dropoff_dentroquadr
+
+df_1_ny %>%
+  filter(latitude>=df_redq_coord$latitude[[1]][[1]]) %>% 
+  filter(latitude<=df_redq_coord$latitude[[2]][[1]]) %>% 
+  filter(longitude>=df_redq_coord$longitude[[1]][[1]]) %>% 
+  filter(longitude<=df_redq_coord$longitude[[3]][[1]])-> df_ny_dentroquadr
 ```
 
 ## Mapa das corridas que começaram no quadrante
@@ -65,7 +77,10 @@ df_dropoff_dentroquadr[linhas.sample, ] -> df_dropoff_dentroquadr_sample
 
 leaflet(data = df_dropoff_dentroquadr_sample) %>% 
   addProviderTiles("Esri.NatGeoWorldMap") %>%
-  addCircleMarkers(~ dropoff_longitude, ~dropoff_latitude, radius = 1, color = "red", fillOpacity = 0.3)
+  addCircleMarkers(~ dropoff_longitude, ~dropoff_latitude, radius = 1, color = "red", fillOpacity = 0.3) %>% 
+  addCircleMarkers(df_pickup_dentroquadr_sample$pickup_longitude, df_pickup_dentroquadr_sample$pickup_latitude, radius = 1, color = "blue", fillOpacity = 0.3) %>% 
+      addCircleMarkers(df_ny_dentroquadr$longitude, df_ny_dentroquadr$latitude, radius = 10, color = 'green', fillOpacity = 0.3)
+
 
 ```
 
@@ -77,31 +92,32 @@ glimpse(df_pickup_dentroquadr_sample)
 #head(df_pickup_dentroquadr_sample)
 ```
 
-## As viagens que deixam os passageiros no quadrante tem um desivo padrão menor, pois provavelmente as pessoas estão ficando na Penn Station (local bem no centro do quadrante) 
+## As viagens que pegam os passageiros no quadrante tem um desivo padrão menor, pois provavelmente as pessoas estão pegando taxi na Penn Station (local bem no centro do quadrante). 
 
 
 ```{r}
 library(plotly)
 library(ggplot2)
 
-df_pickup_dentroquadr_sample %>%
-  plot_ly(x=~trip_duration,type="histogram")
+# df_pickup_dentroquadr_sample %>%
+#   plot_ly(x=~trip_duration,type="histogram")
+# 
+# df_dropoff_dentroquadr_sample %>%
+#   plot_ly(x=~trip_duration,type="histogram") %>%
+#   layout(barmode = "overlay",xaxis=list(range=c(0,5000)))
 
-df_dropoff_dentroquadr_sample %>%
-  plot_ly(x=~trip_duration,type="histogram") %>%
-  layout(barmode = "overlay",xaxis=list(range=c(0,1000)))
+plot_ly(alpha = 0.5) %>%
+  add_histogram(x = df_pickup_dentroquadr_sample$trip_duration) %>%
+  add_histogram(x = df_dropoff_dentroquadr_sample$trip_duration) %>%
+  layout(barmode = "overlay",xaxis=list(range=c(0,5000)))
 
-# plot_ly(alpha = 0.5) %>%
-#   add_histogram(x = df_pickup_dentroquadr_sample$trip_duration) %>%
-#   add_histogram(x = df_dropoff_dentroquadr_sample$trip_duration) %>%
-#   layout(barmode = "overlay",xaxis=list(range=c(0,1000)))
-
-sd(df_pickup_dentroquadr_sample$trip_duration)
-sd(df_dropoff_dentroquadr_sample$trip_duration)
+#sd(df_pickup_dentroquadr_sample$trip_duration)
+#sd(df_dropoff_dentroquadr_sample$trip_duration)
 ```
 ```{r}
 library('ggplot2') # visualisation
 library('dplyr')
+library('lubridate')
 
 p1 <- df_pickup_dentroquadr_sample %>%
   group_by(passenger_count) %>%
@@ -161,6 +177,29 @@ df_pickup_dentroquadr_sample$pickup_weekdays <- wday(df_pickup_dentroquadr_sampl
 
 ```{r}
 
+linearMod <- lm(dropoff_lat ~ dropoff_lon, data=df_dropoff_dentroquadr_sample) 
+print(linearMod)
+
+linearMod <- lm(dropoff_lat ~ dropoff_lon, data=df_pickup_dentroquadr_sample) 
+print(linearMod)
 
 ```
+```{r}
+dropoff.lm = lm(dropoff_lat ~ dropoff_lon, data=df_dropoff_dentroquadr_sample)
+summary(dropoff.lm)$r.squared
+
+pickup.lm = lm(pickup_lat ~ pickup_lon, data=df_pickup_dentroquadr_sample)
+summary(pickup.lm)$r.squared
+```
+## plot dos pontos de interesse do quadrante
+```{r}
+
+
+leaflet(data = df_ny_dentroquadr) %>%
+    addProviderTiles("Esri.NatGeoWorldMap") %>%
+    addCircleMarkers(df_ny_dentroquadr$longitude, df_ny_dentroquadr$latitude, radius = .5, color = 'green', fillOpacity = 0.3)
+
+
+```
+
 
