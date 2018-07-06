@@ -1,8 +1,6 @@
 ---
 title: 'Trabalho final de R do grupo: Adriana, Bruno, Rafael e Vinicius'
-output:
-  html_document:
-    df_print: paged
+output: html_notebook
 ---
 
 # Trabalho final de R do grupo
@@ -62,11 +60,11 @@ summary(train)
 ### motivo: utilizar o dataset completo trava o RStudio em nossos equipamentos
 
 ```{r}
-#set.seed(20)
+set.seed(20)
 # Criando uma sequencia de 1 ate a quantidade de total de linhas
 linhas.idx <- seq_len(nrow(train))
 # Obtendo aleatoriamente 10000 amostras de linhas do dataset
-linhas.sample <- sample(linhas.idx, 10000)
+linhas.sample <- sample(linhas.idx, 5000)
 # Amostra aleatoria com 10000 dados
 df <- train[linhas.sample, ]
 head(df, 10)
@@ -243,7 +241,6 @@ boxplot(kmeans_data[, c("dist_euclidiana")], las=1, xlab=c("dist_euclidiana"))
 
 
 ```{r}
-#set.seed(3)
 normalized <-(kmeans_data-min(kmeans_data))/(max(kmeans_data)-min(kmeans_data))
 clusters <- kmeans(normalized, centers = 3)
 plot(normalized, col=clusters$cluster, pch=21, cex=1)
@@ -303,14 +300,30 @@ df$passenger_count = rescale(df$trip_duration)
 ```
 
 
+## PODE REMOVER - Verificar se tem as colunas
+
+```{r}
+head(train, 3)
+```
+
+
 ## define X (train features) e y (target) para o treino
 
 ```{r}
-X <- df[c('passenger_count', 'dist_manhattan', 'sen_hour', 'sen_week', 'sen_month',
-          'bairro_chegada_1','bairro_chegada_2', 'bairro_chegada_3', 'bairro_chegada_4',
-         'bairro_chegada_5', 'bairro_chegada_6', 'bairro_chegada_7', 'bairro_chegada_8', 
-         'bairro_chegada_9')]
-
+X <- df[c('passenger_count'
+          , 'dist_manhattan'
+          , 'sen_hour'
+          , 'sen_week'
+          , 'sen_month'
+          , 'bairro_chegada_1'
+          , 'bairro_chegada_2'
+          , 'bairro_chegada_3'
+          , 'bairro_chegada_4'
+          , 'bairro_chegada_5'
+          , 'bairro_chegada_6'
+          , 'bairro_chegada_7'
+          , 'bairro_chegada_8'
+          , 'bairro_chegada_9')]
 y <- df['trip_duration']
 ```
 
