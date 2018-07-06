@@ -4,13 +4,15 @@ output: html_document
 ---
 
 
-```{r}
+
+```r
 library(dplyr)
 library(leaflet)
 ```
 
 
-```{r}
+
+```r
 set.seed(1234)
 foo <- sample_n(train, 8e3)
 df_ny <- read.csv(file="./data_source/new_york_historic_places.csv", header=TRUE, sep=",")
@@ -20,34 +22,51 @@ leaflet(data = foo) %>%
   addCircleMarkers(~ pickup_longitude, ~pickup_latitude, radius = 1, color = "blue", fillOpacity = 0.3)
 ```
 
+```
+## Error in loadNamespace(name): there is no package called 'webshot'
+```
 
-```{r}
+
+
+```r
 leaflet(data = df_ny) %>%
     addProviderTiles("Esri.NatGeoWorldMap") %>%
     addCircleMarkers(df_ny$Longitude, df_ny$Latitude, radius = .5, color = 'red', fillOpacity = 0.3)
 ```
 
+```
+## Error in loadNamespace(name): there is no package called 'webshot'
+```
 
-```{r}
+
+
+```r
 df_1 = read.csv('./data_source/facilities-v1.csv')
 ```
 
 
-```{r}
+
+```r
 df_1 %>% 
   filter(city=='New York',facgroup=='Historical Sites') -> df_1_ny
 ```
 
 
-```{r}
+
+```r
 distinct_df = #df_1_ny %>% distinct(facgroup)
               df_1_ny %>% count(facsubgrp)
 ```
 
 
-```{r}
+
+```r
 leaflet(data = df_1_ny) %>%
     addProviderTiles("Esri.NatGeoWorldMap") %>%
     addCircleMarkers(df_1_ny$longitude, df_1_ny$latitude, radius = .5, color = 'red', fillOpacity = 0.3)
+```
+
+```
+## Error in loadNamespace(name): there is no package called 'webshot'
 ```
 
