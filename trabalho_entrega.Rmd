@@ -258,14 +258,35 @@ plot(normalized, col=clusters$cluster, pch=21, cex=1)
 ```
 
 ```{r}
-# Calculando os intervalos de 15 em 15 minutos na coluna hour_quarter
+# Calculando os intervalos de 15 em 15 minutos na coluna hour_quarter, 
+# de mes na coluna month e de dia da semana na coluna 
 df %>%
   mutate(pickup_time_in_minutes = minute(pickup_datetime) + hour(pickup_datetime) * 60) %>% 
   mutate(hour_quarter = pickup_time_in_minutes %/% 15) -> df
 
 head(df, 3)
- 
 ```
 
 
+```{r}
+df %>%
+  group_by(hour_quarter) %>% 
+  summarise(count = n()) -> hour_quarter_freq
 
+plot(hour_quarter_freq, type = "o", main="Gráfico de linha temporal por quartos de hora", xlab="Quarto de hora", ylab="Número de viagens")
+```
+```{r}
+df %>%
+  group_by(pickup_month) %>% 
+  summarise(count = n()) -> month_freq
+
+plot(month_freq, type = "o", main="Gráfico de linha temporal mensal", xlab="Mês", ylab="Número de viagens")
+```
+
+```{r}
+df %>%
+  group_by(pickup_weekdays) %>% 
+  summarise(count = n()) -> weekday_freq
+
+plot(weekday_freq, type = "o", main="Gráfico de linha temporal por dia da semana", xlab="Dia da semana", ylab="Número de viagens")
+```
