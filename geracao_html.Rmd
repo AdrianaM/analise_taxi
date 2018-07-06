@@ -13,18 +13,18 @@ library(knitr)
 
 
 ```{r message=FALSE, warning=FALSE}
-knit('map_view.Rmd')
+rmarkdown::render('map_view.Rmd')
 ```
 
 
 ```{r message=FALSE, warning=FALSE}
-knit('plot_redq.Rmd')
+rmarkdown::render('plot_redq.Rmd')
 ```
 
 
 
 ```{r message=FALSE, warning=FALSE}
-knit('trabalho_entrega.Rmd')
+rmarkdown::render('trabalho_entrega.Rmd')
 ```
 
 
