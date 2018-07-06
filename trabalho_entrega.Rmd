@@ -4,30 +4,62 @@ output:
   html_document:
     df_print: paged
 ---
-```{r}
-library(magrittr) # quando der problema com o "%>%"
-library(dplyr) # selecao e filtro de dados
-library(geosphere) # localizacao geoespacial
-library(lubridate) # datas, fun??es hour, month, wday
-library(plotly) # plot dos gr?ficos
-library(knitr) # usada pelo plotly
-library(dummies) # cria colunas bin?rias para vari?veis categ?ricas
-library(scales) # normaliza dados rescalando para float de 0 a 1
-library(randomForest) # cria rede neural para criar regress?o de tempo de viagem
+
+# Trabalho final de R do grupo
+
+### Participantes: Adriana, Bruno, Rafael e Vinicius
+
+## Carregando as Packages necessarias
+
+```{r message=FALSE, warning=FALSE}
+library(magrittr)         # quando der problema com o "%>%"
+library(dplyr)            # selecao e filtro de dados
+library(geosphere)        # localizacao geoespacial
+library(lubridate)        # datas, funcoes hour, month, wday
+library(plotly)           # plot dos graficos
+library(knitr)            # usada pelo plotly
+library(dummies)          # cria colunas binarias para variaveis categoricas
+library(scales)           # normaliza dados rescalando para float de 0 a 1
+library(randomForest)     # cria rede neural para criar regressao de tempo de viagem
 library(tidyverse)
+library(yaml)
 source('preprocessing.R')
 source('mapa_calor_ny.R')
 ```
 
 
+## Carregando o Dataset (compactado)
+
 ```{r}
-read.csv("./data_source/train.csv") %>% 
+read.csv(gzfile("./data_source/train.csv.gz")) %>% 
   as.data.frame() -> train
 ```
 
+
+## Ver os primeiros 3 registros
+
 ```{r}
-head(train, 10)
+head(train, 3)
 ```
+
+
+## Verificar se existem nulos
+
+```{r}
+sum(is.na(train))
+```
+
+
+## Summary do Dataset
+
+```{r}
+summary(train)
+```
+
+
+## Selecionando 10.000 registros aleatorios para analise -> jogando em um novo dataset que será utilizado daqui em diante
+
+### motivo: utilizar o dataset completo trava o RStudio em nossos equipamentos
 
 ```{r}
 set.seed(20)
@@ -40,28 +72,34 @@ df <- train[linhas.sample, ]
 head(df, 10)
 ```
 
+
 # Preparacao dos dados
 
 ## Regiao de saida
+
 ```{r}
 df$bairro_saida = mapply(define_bairro, df$pickup_longitude, df$pickup_latitude)
 df$bairro_chegada = mapply(define_bairro, df$dropoff_longitude, df$dropoff_latitude)
-
 ```
 
+
 ## Adiciona distancia Euclidiana calculada a partir das coordenadas (arquivo Preprocessing.R)
+
 ```{r}
 #Distancia em KM
 df$dist_euclidiana = dist_eucl(df)
 ```
 
+
 ## Adiciona distancia de Manhattan calculada a partir das coordenadas (arquivo Preprocessing.R)
+
 ```{r}
 df$dist_manhattan = dist_manh(df)
 df$velocidade = df$dist_manhattan / df$trip_duration
 ```
 
-## Prepara data e hora da paprtida (acho que nao precisa da chegada)
+
+## Prepara data e hora da partida
 ## Com isso e possivel pegar horario de pico e dia da semana
 
 ```{r}
@@ -70,19 +108,25 @@ df$pickup_month <- month(df$pickup_datetime)
 df$pickup_weekdays <- wday(df$pickup_datetime)
 ```
 
-## Transforma as vari�veis de tempo em senoides
+
+## Transforma as variaveis de tempo em senoides
+
 ```{r}
 df$sen_hour <- sin(df$pickup_hour / 3.4)
 df$sen_month <- sin(df$pickup_month / 1.7)
 df$sen_week <- sin(df$pickup_weekdays)
 ```
 
+
 ## Exemplo conversao do periodo de 24h em senoide
+
 ```{r}
 plot( sin(seq(from = 1, to = 24/3.4, length.out = 70 )), type = 'o' )
 ```
 
+
 ## Limpeza de corridas zeradas e limpa corridas muito longas
+
 ```{r}
 df %>%
   filter(df$dist_manhattan > 0.5) -> df
@@ -90,13 +134,15 @@ df %>%
   filter(df$trip_duration < 10000) -> df
 ```
 
-# An?lises descritivas
 
-## Divis?o das regi?es que separamos em NY:
-![Regi?es NY](regioes_ny.jpg)
+# Analises descritivas
+
+## Divisao das regioes que separamos em NY:
+![Regioes NY](./data_source/regioes_ny.jpg)
 
 
-## Quantidade de viagens por regi?o de sa?da e chegada
+## Quantidade de viagens por regiao de saida e chegada
+
 ```{r}
 df %>%
   group_by(bairro_saida) %>%
@@ -111,7 +157,9 @@ plot2 = plot_ly(data= data_plot, x= ~bairro_chegada, y= ~n, type = 'bar')
 subplot(plot1, plot2, shareY = T)
 ```
 
+
 ## Media da velocidade das viagens por regiao de saida e chegada
+
 ```{r}
 df %>%
   group_by(bairro_saida) %>%
@@ -128,6 +176,7 @@ subplot(plot1, plot2, shareY = T)
 
 
 ## Plotar correlacao passageiros tempo
+
 ```{r}
 p1 = plot_ly(data= df, x= ~passenger_count, y= ~trip_duration, type = 'scatter', mode = 'markers') 
 p2 = plot_ly(data= df, x= ~dist_manhattan, y= ~trip_duration, type = 'scatter', mode = 'markers') %>% 
@@ -135,7 +184,9 @@ p2 = plot_ly(data= df, x= ~dist_manhattan, y= ~trip_duration, type = 'scatter', 
 subplot(p1, p2)
 ```
 
+
 ## Media da velocidade das viagens por hora e dia da semana
+
 ```{r}
 df %>%
   group_by(pickup_hour) %>%
@@ -150,7 +201,9 @@ plot2 = plot_ly(data= data_plot2, x= ~pickup_weekdays, y= ~velocidade_media, typ
 subplot(plot1, plot2, shareY = T)
 ```
 
+
 ## Quantidade de viagens por hora e dia da semana
+
 ```{r}
 df %>%
   group_by(pickup_hour) %>%
@@ -165,42 +218,45 @@ plot2 = plot_ly(data= data_plot2, x= ~pickup_weekdays, y= ~n, type = 'bar') %>%
 subplot(plot1, plot2)
 ```
 
+
 ## Plota mapa de calor de New York com ponto de partida da viagem
+
 ```{r message=FALSE, warning=FALSE}
 heat_map_taxi(train, "pickup")
 ```
 
+
 ## Plota mapa de calor de New York com ponto de chegada da viagem
+
 ```{r message=FALSE, warning=FALSE}
 heat_map_taxi(train, "dropoff")
 ```
 
 
-```{r}
-head(df, 10)
-```
-
+## Executar uma analise de clusters (duracao da viagem) atraves do "kmeans"
 
 ```{r}
 kmeans_data <- df[, c("trip_duration", "dist_euclidiana")]
 boxplot(kmeans_data[, c("trip_duration")], las=1, xlab="trip_duration")
 boxplot(kmeans_data[, c("dist_euclidiana")], las=1, xlab=c("dist_euclidiana"))
 ```
+
+
 ```{r}
 x <- kmeans_data[, c("trip_duration")]
 y <- x[!x %in% boxplot.stats(x)$out]
 d <- boxplot(y, las=1, xlab="trip_duration")
-
 ```
+
 
 ```{r}
 d
 ```
 
 
+## Tem muitos outliers!!! Removendo.
 
 ```{r}
-# Tem muitos outliers!!! Removendo.
 remove_outliers <- function(x, na.rm = TRUE, ...) {
   qnt <- quantile(x, probs=c(.25, .75), na.rm = na.rm, ...)
   H <- 1.5 * IQR(x, na.rm = na.rm)
@@ -208,13 +264,12 @@ remove_outliers <- function(x, na.rm = TRUE, ...) {
   y[x < (qnt[1] - H)] <- NA
   y[x > (qnt[2] + H)] <- NA
 }
-
 remove_outliers(x, y, cval = NULL, 
   method = c("en-masse", "bottom-up", "linear-regression"), 
   delta = 0.7, n.start = 50, tsmethod.call = NULL, 
   fdiff = NULL, logfile = NULL)
-
 ```
+
 
 ```{r}
 kmeans_no_outliers
@@ -222,21 +277,20 @@ boxplot(kmeans_no_outliers[, c("trip_duration")], las=1, xlab="trip_duration")
 boxplot(kmeans_no_outliers[, c("dist_euclidiana")], las=1, xlab=c("dist_euclidiana"))
 ```
 
+
 ```{r}
 normalized <-(dados-min(dados))/(max(dados)-min(dados))
-
 clusters <- kmeans(normalized, centers = 3)
 plot(normalized, col=clusters$cluster, pch=21, cex=1)
-
 ```
 
+
+## Calculando os intervalos de 15 em 15 minutos na coluna hour_quarter, 
+
 ```{r}
-# Calculando os intervalos de 15 em 15 minutos na coluna hour_quarter, 
-# de mes na coluna month e de dia da semana na coluna 
 df %>%
   mutate(pickup_time_in_minutes = minute(pickup_datetime) + hour(pickup_datetime) * 60) %>% 
   mutate(hour_quarter = pickup_time_in_minutes %/% 15) -> df
-
 head(df, 3)
 ```
 
@@ -245,43 +299,47 @@ head(df, 3)
 df %>%
   group_by(hour_quarter) %>% 
   summarise(count = n()) -> hour_quarter_freq
-
 plot(hour_quarter_freq, type = "o", main="Grafico de linha temporal por quartos de hora", xlab="Quarto de hora", ylab="Numero de viagens")
 ```
+
+
 ```{r}
 df %>%
   group_by(pickup_month) %>% 
   summarise(count = n()) -> month_freq
-
 plot(month_freq, type = "o", main="Grafico de linha temporal mensal", xlab="Mês", ylab="Número de viagens")
 ```
+
 
 ```{r}
 df %>%
   group_by(pickup_weekdays) %>% 
   summarise(count = n()) -> weekday_freq
-
 plot(weekday_freq, type = "o", main="Gráfico de linha temporal por dia da semana", xlab="Dia da semana", ylab="Número de viagens")
 ```
 
+
 # Normalizar dados para o modelo
 
-## Primeiro, criando vari?veis dummies para dia da semana e hora
+## Primeiro, criando variaveis dummies para dia da semana e hora
+
 ```{r}
 bairro_dummy = dummy(df$bairro_chegada, sep='_')
-
 df = data.frame(cbind(df, bairro_dummy))
 ```
 
-## Agora normalizando com Min Max Scaler as vari?veis: dist?ncia, trip_duration e passenger_count
+
+## Agora normalizando com Min Max Scaler as variaveis: distancia, trip_duration e passenger_count
+
 ```{r}
 df$dist_manhattan = rescale(df$dist_manhattan)
 df$trip_duration = rescale(df$trip_duration)
 df$passenger_count = rescale(df$trip_duration)
-
 ```
 
+
 ## define X (train features) e y (target) para o treino
+
 ```{r}
 X <- df[c('passenger_count', 'dist_manhattan', 'sen_hour', 'sen_week', 'sen_month',
           'bairro_chegada_1','bairro_chegada_2', 'bairro_chegada_3', 'bairro_chegada_4',
@@ -291,10 +349,13 @@ X <- df[c('passenger_count', 'dist_manhattan', 'sen_hour', 'sen_week', 'sen_mont
 y <- df['trip_duration']
 ```
 
+
 ## Cria modelo random forest para previsao de tempo de duracaoo das viagens (trip_duration)
+
 ```{r}
 f = create_formula(X)
 fit <- randomForest(f, df, importance=TRUE, ntree=200)
 varImpPlot(fit)
 print(fit)
 ```
+
