@@ -1,0 +1,11 @@
+---
+title: "enrq1"
+output: html_document
+---
+
+```{r}
+
+train <- read.csv("C:/Users/Vinicius Simioni/Documents/FIAP/Projeto Taxi NY/train.csv")
+test <- read.csv("C:/Users/Vinicius Simioni/Documents/FIAP/Projeto Taxi NY/test.csv")
+
+```

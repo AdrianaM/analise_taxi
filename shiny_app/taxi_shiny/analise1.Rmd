@@ -1,0 +1,9 @@
+---
+title: "analise1"
+output: html_document
+---
+
+```{r}
+load('C:/Users/Vinicius Simioni/Documents/FIAP/Projeto Taxi NY/train_test.RData')
+summary(train)
+```

@@ -1,0 +1,170 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(magrittr) # quando der problema com o "%>%"
+library('dplyr') # selecao e filtro de dados
+library('geosphere') # localizacao geoespacial
+library(lubridate) # datas, funções hour, month, wday
+library(plotly) # plot dos gráficos
+library(knitr) # usada pelo plotly
+library(dummies) # cria colunas binárias para variáveis categóricas
+library(scales) # normaliza dados rescalando para float de 0 a 1
+library(randomForest) # cria rede neural para criar regressão de tempo de viagem
+source('preprocessing.R')
+```
+
+
+```{r}
+train <- read.csv("data_source/train.csv")
+
+# pega apenas as 10 primeiras linhas para teste
+df <- head(train, 10000)
+```
+
+bairro de saída
+```{r}
+df$bairro_saida = mapply(define_bairro, df$pickup_longitude, df$pickup_latitude)
+df$bairro_chegada = mapply(define_bairro, df$dropoff_longitude, df$dropoff_latitude)
+
+```
+
+Adiciona distância Euclidiana calculada a partir das coordenadas (arquivo Preprocessing.R)
+```{r}
+
+df$dist_euclidiana = dist_eucl(df)
+
+```
+
+Adiciona distância de Manhattan calculada a partir das coordenadas (arquivo Preprocessing.R)
+```{r}
+
+df$dist_manhattan = dist_manh(df)
+df$velocidade = df$dist_manhattan / df$trip_duration
+```
+
+Prepara data e hora da paprtida (acho que não precisa da chegada)
+Com isso é possível pegar horário de pico e dia da semana
+
+```{r}
+df$pickup_hour <- hour(df$pickup_datetime)
+df$pickup_month <- month(df$pickup_datetime)
+df$pickup_weekdays <- wday(df$pickup_datetime)
+```
+
+Limpeza de corridas zeradas e limpa corridas muito longas
+```{r}
+df %>%
+  filter(df$dist_manhattan > 0.5) -> df
+df %>%
+  filter(df$trip_duration < 10000) -> df
+```
+
+Quantidade de viagens por bairro de saída e chegada
+```{r}
+df %>%
+  group_by(bairro_saida) %>%
+  count() -> data_plot
+plot1 = plot_ly(data= data_plot, x= ~bairro_saida, y= ~n, type = 'bar')
+
+df %>%
+  group_by(bairro_chegada) %>%
+  count() -> data_plot
+plot2 = plot_ly(data= data_plot, x= ~bairro_chegada, y= ~n, type = 'bar')
+
+subplot(plot1, plot2, shareY = T)
+```
+Média da velocidade das viagens por bairro de saída e chegada
+```{r}
+df %>%
+  group_by(bairro_saida) %>%
+  summarize(velocidade_media = mean(velocidade),n()) -> data_plot
+plot1 = plot_ly(data= data_plot, x= ~bairro_saida, y= ~velocidade_media, type = 'bar')
+
+df %>%
+  group_by(bairro_chegada) %>%
+  summarize(velocidade_media = mean(velocidade),n()) -> data_plot
+plot2 = plot_ly(data= data_plot, x= ~bairro_chegada, y= ~velocidade_media, type = 'bar')
+
+subplot(plot1, plot2, shareY = T)
+```
+
+
+Plotar correlação passageiros tempo
+```{r}
+plot_ly(data= df, x= ~passenger_count, y= ~trip_duration, type = 'scatter', mode = 'markers')
+```
+
+Plotar correlação distancia tempo manhatan
+```{r}
+plot_ly(data= df, x= ~dist_manhattan, y= ~trip_duration, type = 'scatter', mode = 'markers')
+```
+
+Média da velocidade das viagens por hora
+```{r}
+df %>%
+  group_by(pickup_hour) %>%
+  summarize(velocidade_media = mean(velocidade),n()) -> data_plot1
+plot1 = plot_ly(data= data_plot1, x= ~pickup_hour, y= ~velocidade_media, type = 'bar')
+df %>%
+  group_by(pickup_weekdays) %>%
+  summarize(velocidade_media = mean(velocidade),n()) -> data_plot2
+plot2 = plot_ly(data= data_plot2, x= ~pickup_weekdays, y= ~velocidade_media, type = 'bar')
+
+subplot(plot1, plot2, shareY = T)
+```
+
+Quantidade de viagens por hora
+```{r}
+df %>%
+  group_by(pickup_hour) %>%
+  count() -> data_plot1
+plot1 = plot_ly(data= data_plot1, x= ~pickup_hour, y= ~n, type = 'bar')
+df %>%
+  group_by(pickup_weekdays) %>%
+  count() -> data_plot2
+plot2 = plot_ly(data= data_plot2, x= ~pickup_weekdays, y= ~n, type = 'bar')
+
+subplot(plot1, plot2)
+```
+
+Normalizar dados para a análise
+
+Primeiro, criando variáveis dummies para dia da semana e hora
+```{r}
+week_dummy = dummy(df$pickup_weekdays, sep='_')
+hour_dummy = dummy(df$pickup_hour, sep='_')
+
+df = data.frame(cbind(df, week_dummy, hour_dummy))
+```
+
+Agora normalizando com Min Max Scaler as variáveis: distância, trip_duration e passenger_count
+```{r}
+df$dist_manhattan = rescale(df$dist_manhattan)
+df$trip_duration = rescale(df$trip_duration)
+df$passenger_count = rescale(df$trip_duration)
+
+```
+
+define X (train features) e y (target) para o treino
+```{r}
+X <- df[c('passenger_count', 'dist_manhattan', 'pickup_weekdays_1', 'pickup_weekdays_2', 'pickup_weekdays_3',
+         'pickup_weekdays_4', 'pickup_weekdays_5', 'pickup_weekdays_6', 'pickup_weekdays_7', 'pickup_hour_1',
+         'pickup_hour_2', 'pickup_hour_3', 'pickup_hour_4', 'pickup_hour_5', 'pickup_hour_6', 'pickup_hour_7',
+         'pickup_hour_8', 'pickup_hour_9', 'pickup_hour_10', 'pickup_hour_11', 'pickup_hour_12',
+         'pickup_hour_13', 'pickup_hour_14', 'pickup_hour_15', 'pickup_hour_16', 'pickup_hour_17',
+         'pickup_hour_18', 'pickup_hour_19', 'pickup_hour_20', 'pickup_hour_21', 'pickup_hour_22',
+         'pickup_hour_23')]
+
+y <- df['trip_duration']
+```
+
+Cria rede neural para previsão de tempo de duração das viagens (trip_duration)
+```{r}
+f = create_formula(X)
+fit <- randomForest(f, df, importance=TRUE, ntree=200)
+varImpPlot(fit)
+```
+
+
