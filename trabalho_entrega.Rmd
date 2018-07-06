@@ -14,6 +14,7 @@ library(knitr) # usada pelo plotly
 library(dummies) # cria colunas bin?rias para vari?veis categ?ricas
 library(scales) # normaliza dados rescalando para float de 0 a 1
 library(randomForest) # cria rede neural para criar regress?o de tempo de viagem
+library(tidyverse)
 source('preprocessing.R')
 source('mapa_calor_ny.R')
 ```
@@ -206,12 +207,65 @@ varImpPlot(fit)
 head(df, 10)
 ```
 
+
 ```{r}
-dados <- df[, c("trip_duration", "dist_euclidiana")]
+kmeans_data <- df[, c("trip_duration", "dist_euclidiana")]
+boxplot(kmeans_data[, c("trip_duration")], las=1, xlab="trip_duration")
+boxplot(kmeans_data[, c("dist_euclidiana")], las=1, xlab=c("dist_euclidiana"))
+```
+```{r}
+x <- kmeans_data[, c("trip_duration")]
+y <- x[!x %in% boxplot.stats(x)$out]
+d <- boxplot(y, las=1, xlab="trip_duration")
+
+```
+
+```{r}
+d
+```
+
+
+
+```{r}
+# Tem muitos outliers!!! Removendo.
+remove_outliers <- function(x, na.rm = TRUE, ...) {
+  qnt <- quantile(x, probs=c(.25, .75), na.rm = na.rm, ...)
+  H <- 1.5 * IQR(x, na.rm = na.rm)
+  y <- x
+  y[x < (qnt[1] - H)] <- NA
+  y[x > (qnt[2] + H)] <- NA
+}
+
+remove.outliers(x, y, cval = NULL, 
+  method = c("en-masse", "bottom-up", "linear-regression"), 
+  delta = 0.7, n.start = 50, tsmethod.call = NULL, 
+  fdiff = NULL, logfile = NULL)
+
+```
+
+```{r}
+kmeans_no_outliers
+boxplot(kmeans_no_outliers[, c("trip_duration")], las=1, xlab="trip_duration")
+boxplot(kmeans_no_outliers[, c("dist_euclidiana")], las=1, xlab=c("dist_euclidiana"))
+```
+
+```{r}
 normalized <-(dados-min(dados))/(max(dados)-min(dados))
 
 clusters <- kmeans(normalized, centers = 3)
 plot(normalized, col=clusters$cluster, pch=21, cex=1)
+
 ```
+
+```{r}
+# Calculando os intervalos de 15 em 15 minutos na coluna hour_quarter
+df %>%
+  mutate(pickup_time_in_minutes = minute(pickup_datetime) + hour(pickup_datetime) * 60) %>% 
+  mutate(hour_quarter = pickup_time_in_minutes %/% 15) -> df
+
+head(df, 3)
+ 
+```
+
 
 
